@@ -1,5 +1,4 @@
 import React from 'react';
-import Header from "../components/Header";
 import {
     Accordion,
     AccordionDetails,
@@ -16,13 +15,12 @@ import Typography from "@mui/material/Typography";
 import {Button} from "@material-ui/core";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const ProjectPage: React.FC = () => {
+const Projects: React.FC = () => {
     const labels = ['НАЗВАНИЕ', 'ВСЕГО', 'PASSED', 'SKIPPED', 'FAILED', 'RETEST']
     const exampleData = ['Тест-план 1', '13', '10', '1', '0', '2']
 
     return (
-        <>
-            <Header/>
+        <div>
             <Grid sx={{display: 'flex', justifyContent: 'center'}}>
                 <Chart
                     chartType="LineChart"
@@ -85,9 +83,9 @@ const ProjectPage: React.FC = () => {
                         style={{maxHeight: '20px', fontWeight: 600, margin: '20px 20px 20px'}}>Фильтр</Button>
             </Paper>
 
-        </>
+        </div>
 
     );
 };
 
-export default ProjectPage;
+export default Projects;
