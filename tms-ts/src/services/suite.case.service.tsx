@@ -15,6 +15,16 @@ export default class SuiteCaseService {
         return axiosTMS.get("api/v1/suites/?treeview=true")
     }
 
+    static async deleteCases(idCases: number[]) {
+        for (let i = 0; i < idCases.length; i++) {
+            await this.deleteCase(idCases[i]).catch((err) => console.log(err))
+        }
+    }
+
+    static deleteCase(idCase: number) {
+        return axiosTMS.delete("api/v1/cases/" + idCase + "/")
+    }
+
     static deleteSuite(idSuite: number) {
         return axiosTMS.delete("api/v1/suites/" + idSuite + "/")
     }

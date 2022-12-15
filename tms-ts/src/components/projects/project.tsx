@@ -179,7 +179,7 @@ const Project: React.FC = () => {
         <div style={{display: "flex", flexDirection: "column"}}>
             <Grid sx={{display: 'flex', justifyContent: 'center', mt: '20px'}}>
                 {tests.length > 0 ? charts.map((chart) =>
-                        <div style={{width: "50%"}}>
+                        <div style={{width: "45%"}}>
                             {chart}
                         </div>)
                     : <></>}

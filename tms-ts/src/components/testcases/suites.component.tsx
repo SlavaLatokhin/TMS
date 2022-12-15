@@ -1,7 +1,7 @@
 import {
     Button, Grid
 } from "@material-ui/core";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import useStyles from "../../styles/styles";
 import CreationCase from "./creation.case.component";
 import CreationSuite from "./creation.suite.component";
@@ -10,6 +10,10 @@ import SuiteCaseService from "../../services/suite.case.service";
 import FolderSuites from "./folder.suites.component";
 import {styled} from "@mui/material/styles";
 import {Tooltip, tooltipClasses, TooltipProps} from "@mui/material";
+import DetailedCaseInfo from "./detailed.case.info.component";
+import SplitterLayout from 'react-splitter-layout';
+import 'react-splitter-layout/lib/index.css';
+
 
 export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) => (
     <Tooltip  {...props} classes={{popper: className}}/>
@@ -73,15 +77,41 @@ export interface suite {
 
 
 const SuitesComponent: React.FC = () => {
-    const classes = useStyles()
     const [showCreationCase, setShowCreationCase] = useState(false)
     const [showCreationSuite, setShowCreationSuite] = useState(false)
     const [selected, setSelected] = React.useState<readonly string[]>([]);
     const [suites, setSuites] = useState<suite []>([])
     const [treeSuites, setTreeSuites] = useState<treeSuite[]>([])
-    const [cases, setCases] = useState([])
+    // const [cases, setCases] = useState([])
     const [infoCaseForEdit, setInfoCaseForEdit] = useState<myCase | null>(null)
+    const [lastEditCase, setLastEditCase] = useState<number>(-1)
     const [selectedSuiteCome, setSelectedSuiteCome] = useState<{ id: number, name: string } | null>(null)
+    const [detailedCaseInfo, setDetailedCaseInfo] = useState<{ show: boolean, myCase: myCase }>({
+        show: false, myCase: {
+            id: -1,
+            name: "",
+            suite: -1,
+            scenario: "",
+            project: -1,
+            setup: "",
+            teardown: "",
+            estimate: -1
+        }
+    })
+
+    // const memoizedValue = useMemo(() => <TableSuites
+    //     selected={selected} setSelected={setSelected}
+    //     setShowCreationCase={setShowCreationCase}
+    //     setShowCreationSuite={setShowCreationSuite}
+    //     setSelectedSuiteCome={setSelectedSuiteCome}
+    //     suites={suites}
+    //     treeSuites={treeSuites}
+    //     setInfoCaseForEdit={setInfoCaseForEdit}
+    //     detailedCaseInfo={detailedCaseInfo}
+    //     setDetailedCaseInfo={setDetailedCaseInfo}
+    // />, [suites, treeSuites]);
+
+    const memoizedValue2 = useMemo(() => <FolderSuites treeSuites={treeSuites} suites={suites}/>, [suites, treeSuites]);
 
     useEffect(() => {
         // SuiteCaseService.authorize().then((response) => {
@@ -89,22 +119,30 @@ const SuitesComponent: React.FC = () => {
         SuiteCaseService.getSuites().then((response) => {
             // const localSuites = response.data
             setSuites(response.data)
-            // for (let i = 100; i< response.data.length; i++){
+            console.log(response.data.length)
+            // console.log(response.data)
+
+            // console.log(response.data)
+            // for (let i = 100; i< 600; i++){
             //     SuiteCaseService.deleteSuite(response.data[i].id).then((r)=> console.log(r))
             // }
-            SuiteCaseService.getCases().then((response) => {
-                // const localCases = response.data
-                setCases(response.data)
-                SuiteCaseService.getTreeSuites().then((response) => {
-                    // const localTreeSuites = response.data
-                    setTreeSuites(response.data)
-                })
-            })
+            // SuiteCaseService.deleteCase(2000).then((r) => console.log(r)).catch((r) => console.log(r))
+            // SuiteCaseService.getCases().then((response) => {
+            // const localCases = response.data
+            // console.log(response.data.length)
+            // SuiteCaseService.getTreeSuites().then((response) => {
+            //     // const localTreeSuites = response.data
+            //     setTreeSuites(response.data)
+            // })
+            // })
         })
             // })
             .catch((e) => {
                 console.log(e);
             });
+        SuiteCaseService.getTreeSuites().then((response) => {
+            setTreeSuites(response.data)
+        })
     }, [])
 
     const handleShowCreationCase = () => {
@@ -118,6 +156,7 @@ const SuitesComponent: React.FC = () => {
         setShowCreationSuite(true)
         setSelectedSuiteCome(null)
     }
+    const classes = useStyles()
     return (
         <Grid style={{
             marginTop: 0,
@@ -136,6 +175,11 @@ const SuitesComponent: React.FC = () => {
                              suites={suites}
                              treeSuites={treeSuites}
                              setInfoCaseForEdit={setInfoCaseForEdit}
+                             detailedCaseInfo={detailedCaseInfo}
+                             setDetailedCaseInfo={setDetailedCaseInfo}
+                             lastEditCase={lastEditCase}
+                             setLastEditCase={setLastEditCase}
+                             setTreeSuites={setTreeSuites}
                 />
             </Grid>
             <Grid style={{
@@ -162,6 +206,9 @@ const SuitesComponent: React.FC = () => {
                                       selectedSuiteCome={selectedSuiteCome} setTreeSuites={setTreeSuites}
                                       infoCaseForEdit={infoCaseForEdit}
                                       setInfoCaseForEdit={setInfoCaseForEdit}
+                                      setDetailedCaseInfo={setDetailedCaseInfo}
+                                      detailedCaseInfo={detailedCaseInfo}
+                                      setLastEditCase={setLastEditCase}
                         />}
                         <CreationSuite show={showCreationSuite} setShow={setShowCreationSuite} suites={suites}
                                        setSuites={setSuites}
@@ -171,7 +218,7 @@ const SuitesComponent: React.FC = () => {
                 <Grid style={{
                     height: "67%"
                 }}>
-                    <FolderSuites treeSuites={treeSuites} suites={suites}/>
+                    {memoizedValue2}
                 </Grid>
             </Grid>
         </Grid>

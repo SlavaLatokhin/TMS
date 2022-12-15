@@ -12,6 +12,7 @@ export default class AuthService {
             .then((response) => {
                 if (response.data.access) {
                     localStorage.setItem("currentUsername", username)
+                    localStorage.setItem("currentPassword", password)
                     localStorage.setItem("accessToken", response.data.access)
                     localStorage.setItem("refreshToken", response.data.refresh)
                 }

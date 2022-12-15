@@ -1,16 +1,29 @@
 import {
-    Grid, Table, TableBody,
-    TableCell, TableRow, Collapse, IconButton, Chip, tableCellClasses, Checkbox, Link
+    Grid,
+    Table,
+    TableBody,
+    TableCell,
+    TableRow,
+    Collapse,
+    IconButton,
+    Chip,
+    tableCellClasses,
+    Checkbox,
+    Link,
+    Box
 } from "@mui/material";
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import useStyles from "../../styles/styles";
 import {myCase, suite, treeSuite} from "./suites.component";
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import SplitterLayout from 'react-splitter-layout';
-import 'react-splitter-layout/lib/index.css';
 import DetailedCaseInfo from "./detailed.case.info.component";
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DeletionDialogElement from "./deletion.dialog.element.component";
+import DeletionDialogElements from "./deletion.dialog.elements.component";
+import SplitterLayout from 'react-splitter-layout';
+import 'react-splitter-layout/lib/index.css';
 
 // const tags = ['asdf', 'ОЧЕНЬ', "СРОЧНО", 'СРОЧНО', 'ОЧЕНЬ',
 //     "СРОЧНО", 'СРОЧНО', 'ОЧЕНЬ', 'СРОЧНО', 'ОЧЕНЬ', "СРОЧНО", 'СРОЧНО', 'ОЧЕНЬ', "СРОЧНО", 'СРОЧНО', 'ОЧЕНЬ',
@@ -102,9 +115,12 @@ function TableRowCase(props: {
     setDetailedCaseInfo: (myCase: { show: boolean, myCase: myCase }) => void,
     detailedCaseInfo: { show: boolean, myCase: myCase }, setInfoCaseForEdit: (myCase: myCase) => void,
     onecase: myCase,
-    selected: number [], setSelected: (ids: number[]) => void
+    selected: number [], setSelected: (ids: number[]) => void,
+    setTreeSuites: (treeSuites: treeSuite[]) => void,
+    setOpenDialogDeletion: (show: boolean) => void,
+    setComponentForDeletion: (component: { type: string, id: number }) => void
 }) {
-    const [visibleEditIcon, setVisibleEditIcon] = React.useState(false);
+    const [visibleEditDeleteIcon, setVisibleEditDeleteIcon] = useState(false);
     const {
         row,
         setShowCreationCase,
@@ -114,7 +130,10 @@ function TableRowCase(props: {
         setInfoCaseForEdit,
         onecase,
         selected,
-        setSelected
+        setSelected,
+        setTreeSuites,
+        setOpenDialogDeletion,
+        setComponentForDeletion
     } = props;
     const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
         const selectedIndex = selected.indexOf(id);
@@ -134,12 +153,13 @@ function TableRowCase(props: {
         }
         setSelected(newSelected);
     };
+
     return (
         <TableRow
-                  onMouseMove={() => setVisibleEditIcon(true)}
-                  onMouseLeave={() => setVisibleEditIcon(false)}
-                  hover
-                  selected={selected.indexOf(onecase.id) !== -1}
+            onMouseMove={() => setVisibleEditDeleteIcon(true)}
+            onMouseLeave={() => setVisibleEditDeleteIcon(false)}
+            hover
+            selected={selected.indexOf(onecase.id) !== -1}
         >
             <TableCell>
                 <Checkbox
@@ -159,32 +179,45 @@ function TableRowCase(props: {
                 {onecase.name}
             </TableCell>
             <TableCell style={{textAlign: "end", display: "flex", justifyContent: "flex-end", minWidth: 60}}>
-                {visibleEditIcon &&
-                <IconButton size={"small"} onClick={() => {
-                    setShowCreationCase(true)
-                    setSelectedSuiteCome({id: row.id, name: row.name})
-                    setInfoCaseForEdit(onecase)
-                }}>
-                    <EditIcon fontSize={"small"}/>
-                </IconButton>}
-                <IconButton size={"small"} onClick={() => {
-                    if (onecase.id == detailedCaseInfo.myCase.id) {
-                        setDetailedCaseInfo({
-                            show: !detailedCaseInfo.show,
-                            myCase: onecase
-                        })
-                    } else {
+                {visibleEditDeleteIcon &&
+                <Grid style={{textAlign: "end", display: "flex", justifyContent: "flex-end", width: 30}}>
+                    <IconButton size={"small"} onClick={() => {
+                        setComponentForDeletion({type: "case", id: onecase.id})
+                        setOpenDialogDeletion(true)
+                    }}>
+                        <DeleteIcon fontSize={"small"}/>
+                    </IconButton>
+                    <IconButton size={"small"} onClick={() => {
+                        setShowCreationCase(true)
+                        setSelectedSuiteCome({id: row.id, name: row.name})
+                        setInfoCaseForEdit(onecase)
+                    }}>
+                        <EditIcon fontSize={"small"}/>
+                    </IconButton>
+                </Grid>}
+                <Grid id={onecase.id.toString() + "Arrow"}>
+                    <IconButton size={"small"} onClick={() => {
+                        // if (onecase.id == detailedCaseInfo.myCase.id) {
+                        //     setDetailedCaseInfo({
+                        //         show: !detailedCaseInfo.show,
+                        //         myCase: onecase
+                        //     })
+                        // } else {
                         setDetailedCaseInfo({
                             show: true,
                             myCase: onecase
                         })
-                    }
-                }}>
-                    <KeyboardArrowRightIcon sx={{
-                        transform: (onecase.id == detailedCaseInfo.myCase.id && detailedCaseInfo.show) ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: '0.2s',
-                    }}/>
-                </IconButton>
+                        // }
+                    }}>
+                        <KeyboardArrowRightIcon
+                            // id={onecase.id.toString() + "Arrow"}
+                            //     sx={{
+                            //     transform: (onecase.id == detailedCaseInfo.myCase.id && detailedCaseInfo.show) ? 'rotate(180deg)' : 'rotate(0deg)',
+                            //     transition: '0.2s',
+                            // }}
+                        />
+                    </IconButton>
+                </Grid>
             </TableCell>
         </TableRow>)
 }
@@ -193,7 +226,10 @@ function Row(props: {
     row: treeSuite, setShowCreationCase: (show: boolean) => void, setShowCreationSuite: (show: boolean) => void,
     setSelectedSuiteCome: (selectedSuite: { id: number, name: string } | null) => void, treeSuitesOpenMap: Map<number, boolean>,
     setTreeSuitesOpenMap: (newMap: (prev: Map<number, boolean>) => any) => void, setDetailedCaseInfo: (myCase: { show: boolean, myCase: myCase }) => void,
-    detailedCaseInfo: { show: boolean, myCase: myCase }, setInfoCaseForEdit: (myCase: myCase) => void
+    detailedCaseInfo: { show: boolean, myCase: myCase }, setInfoCaseForEdit: (myCase: myCase) => void,
+    setTreeSuites: (treeSuites: treeSuite[]) => void, selectedCases: number[], setSelectedCases: (cases: number[]) => void,
+    setOpenDialogDeletion: (show: boolean) => void;
+    setComponentForDeletion: (component: { type: string, id: number }) => void
 }) {
     const {
         row,
@@ -204,17 +240,37 @@ function Row(props: {
         setTreeSuitesOpenMap,
         setDetailedCaseInfo,
         detailedCaseInfo,
-        setInfoCaseForEdit
+        setInfoCaseForEdit,
+        setTreeSuites,
+        selectedCases,
+        setSelectedCases,
+        setOpenDialogDeletion,
+        setComponentForDeletion
     } = props;
     const [localOpen, setLocalOpen] = React.useState<boolean | undefined>(undefined);
-    const [selected, setSelected] = React.useState<number []>([]);
-    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.checked) {
-            const newSelected = row.test_cases.map((n) => n.id);
-            setSelected(newSelected);
-            return;
+
+    const checkIfAllSelected = () => {
+        if (row.test_cases.length > 0) {
+            for (let i = 0; i < row.test_cases.length; i++) {
+                if (selectedCases.indexOf(row.test_cases[i].id) === -1) {
+                    return false
+                }
+            }
+            return true
         }
-        setSelected([]);
+        return false
+    };
+
+    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const caseIdsInCurrentRow = row.test_cases.map((onecase) => onecase.id)
+        if (event.target.checked) {
+            const newSelected = caseIdsInCurrentRow.filter((caseid) => selectedCases.indexOf(caseid) === -1)
+            setSelectedCases(newSelected.concat(selectedCases))
+            return;
+        } else {
+            const newSelected = selectedCases.filter((caseid) => caseIdsInCurrentRow.indexOf(caseid) === -1)
+            setSelectedCases(newSelected)
+        }
     };
 
     useEffect(() => {
@@ -224,7 +280,7 @@ function Row(props: {
         } else {
             setLocalOpen(treeSuitesOpenMap.get(row.id))
         }
-    })
+    }, [treeSuitesOpenMap])
 
     const setOpenClose = () => {
         const flag = treeSuitesOpenMap.get(row.id)
@@ -245,6 +301,12 @@ function Row(props: {
                             }}/>
                         }
                               style={{marginTop: 7}} label={row.name}/>
+                        <IconButton size={"small"} onClick={() => {
+                            setComponentForDeletion({type: "suite", id: row.id})
+                            setOpenDialogDeletion(true)
+                        }} style={{marginLeft: 2, marginTop: 7}}>
+                            <DeleteIcon fontSize={"small"}/>
+                        </IconButton>
                     </Grid>
                 </TableCell>
             </TableRow>
@@ -259,8 +321,8 @@ function Row(props: {
                                         <TableCell style={{width: "5%"}}>
                                             <Checkbox
                                                 style={{height: 20}}
-                                                indeterminate={selected.length > 0 && selected.length < row.test_cases.length}
-                                                checked={selected.length > 0 && selected.length === row.test_cases.length}
+                                                // indeterminate={selectedCases.length > 0 && selectedCases.length < row.test_cases.length}
+                                                checked={checkIfAllSelected()}
                                                 onChange={(e) => handleSelectAllClick(e)}
                                                 color="primary"
 
@@ -278,13 +340,18 @@ function Row(props: {
                                 </TableBody>
                                 <TableBody style={{border: "solid", borderWidth: "0px 1px 1px 1px"}}>
                                     {row.test_cases.map((onecase, index) => (
-                                        <TableRowCase key={onecase.id} onecase={onecase} row={row} selected={selected}
+                                        <TableRowCase key={onecase.id} onecase={onecase} row={row}
+                                                      selected={selectedCases}
                                                       detailedCaseInfo={detailedCaseInfo}
                                                       setDetailedCaseInfo={setDetailedCaseInfo}
                                                       setInfoCaseForEdit={setInfoCaseForEdit}
-                                                      setSelected={setSelected}
+                                                      setSelected={setSelectedCases}
                                                       setSelectedSuiteCome={setSelectedSuiteCome}
-                                                      setShowCreationCase={setShowCreationCase}/>
+                                                      setShowCreationCase={setShowCreationCase}
+                                                      setTreeSuites={setTreeSuites}
+                                                      setOpenDialogDeletion={setOpenDialogDeletion}
+                                                      setComponentForDeletion={setComponentForDeletion}
+                                        />
                                     ))}
                                 </TableBody>
                                 <TableBody>
@@ -321,6 +388,11 @@ function Row(props: {
                                              detailedCaseInfo={detailedCaseInfo}
                                              setDetailedCaseInfo={setDetailedCaseInfo}
                                              setInfoCaseForEdit={setInfoCaseForEdit}
+                                             setTreeSuites={setTreeSuites}
+                                             selectedCases={selectedCases}
+                                             setSelectedCases={setSelectedCases}
+                                             setOpenDialogDeletion={setOpenDialogDeletion}
+                                             setComponentForDeletion={setComponentForDeletion}
                                         />
                                     ))}
                                 </TableBody>
@@ -340,7 +412,11 @@ const TableSuites = (props: {
     selected: readonly string[], setSelected: (array: readonly string[]) => void,
     setShowCreationCase: (show: boolean) => void, setShowCreationSuite: (show: boolean) => void,
     treeSuites: treeSuite[], setSelectedSuiteCome: (selectedSuite: { id: number, name: string } | null) => void,
-    suites: suite [], setInfoCaseForEdit: (myCase: myCase) => void
+    suites: suite [], setInfoCaseForEdit: (myCase: myCase) => void,
+    setDetailedCaseInfo: (myCase: { show: boolean, myCase: myCase }) => void,
+    detailedCaseInfo: { show: boolean, myCase: myCase }, lastEditCase: number,
+    setLastEditCase: (id: number) => void,
+    setTreeSuites: (treeSuites: treeSuite[]) => void;
 }) => {
     const classes = useStyles()
     const {
@@ -349,21 +425,32 @@ const TableSuites = (props: {
         suites,
         setSelectedSuiteCome,
         treeSuites,
-        setInfoCaseForEdit
+        setInfoCaseForEdit,
+        setDetailedCaseInfo,
+        detailedCaseInfo,
+        lastEditCase,
+        setLastEditCase,
+        setTreeSuites
     } = props;
     const [treeSuitesOpenMap, setTreeSuitesOpenMap] = useState(new Map())
-    const [detailedCaseInfo, setDetailedCaseInfo] = useState<{ show: boolean, myCase: myCase }>({
-        show: false, myCase: {
-            id: -1,
-            name: "",
-            suite: -1,
-            scenario: "",
-            project: -1,
-            setup: "",
-            teardown: "",
-            estimate: -1
-        }
-    })
+    const [shownCase, setShownCase] = useState<{ show: boolean, myCaseId: number }>({show: false, myCaseId: -1})
+    const [selectedCases, setSelectedCases] = React.useState<number []>([]);
+    const [openDialogDeletion, setOpenDialogDeletion] = useState(false);
+    const [openDialogDeletionElements, setOpenDialogDeletionElements] = useState(false);
+    const [componentForDeletion, setComponentForDeletion] = useState<{ type: string, id: number }>({type: "", id: -1})
+    const [loading, setLoading] = useState(true)
+    // const [detailedCaseInfo, setDetailedCaseInfo] = useState<{ show: boolean, myCase: myCase }>({
+    //     show: false, myCase: {
+    //         id: -1,
+    //         name: "",
+    //         suite: -1,
+    //         scenario: "",
+    //         project: -1,
+    //         setup: "",
+    //         teardown: "",
+    //         estimate: -1
+    //     }
+    // })
 
     const openAll = () => {
         let newMap = new Map()
@@ -373,6 +460,12 @@ const TableSuites = (props: {
         setTreeSuitesOpenMap(newMap)
     }
 
+    // useEffect(() => {
+    //     return () => {
+    //         setLoading(false)
+    //     }
+    // }, [])
+
     const closeAll = () => {
         let newMap = new Map()
         suites.map((suite) => {
@@ -380,47 +473,124 @@ const TableSuites = (props: {
         })
         setTreeSuitesOpenMap(newMap)
     }
+    const memoizedValue = useMemo(() => <Table size={"small"} sx={{
+        [`& .${tableCellClasses.root}`]: {
+            borderBottom: "none",
+        }
+    }}>
+        <TableBody>
+            {treeSuites.map((suite, index) => (
+                <Row key={suite.id} row={suite}
+                     setShowCreationCase={setShowCreationCase}
+                     setShowCreationSuite={setShowCreationSuite}
+                     setSelectedSuiteCome={setSelectedSuiteCome}
+                     treeSuitesOpenMap={treeSuitesOpenMap}
+                     setTreeSuitesOpenMap={setTreeSuitesOpenMap}
+                     detailedCaseInfo={detailedCaseInfo}
+                     setDetailedCaseInfo={setDetailedCaseInfo}
+                     setInfoCaseForEdit={setInfoCaseForEdit}
+                     setTreeSuites={setTreeSuites}
+                     selectedCases={selectedCases}
+                     setSelectedCases={setSelectedCases}
+                     setOpenDialogDeletion={setOpenDialogDeletion}
+                     setComponentForDeletion={setComponentForDeletion}
+                />
+            ))}
+        </TableBody>
+    </Table>, [suites, treeSuites, treeSuitesOpenMap, selectedCases]);
 
+    useEffect(() => {
+        if (detailedCaseInfo.show) {
+            if (shownCase.show && detailedCaseInfo.myCase.id === shownCase.myCaseId && lastEditCase !== detailedCaseInfo.myCase.id) {
+                document.getElementById(shownCase.myCaseId + "Arrow")!.style.transform = ""
+                setDetailedCaseInfo({
+                    show: false, myCase: {
+                        id: -1,
+                        name: "",
+                        suite: -1,
+                        scenario: "",
+                        project: -1,
+                        setup: "",
+                        teardown: "",
+                        estimate: -1
+                    }
+                })
+                setShownCase({show: false, myCaseId: -1})
+            } else if (lastEditCase !== detailedCaseInfo.myCase.id) {
+                document.getElementById(detailedCaseInfo.myCase.id + "Arrow")!.style.transform = 'rotate(180deg)'
+                if (shownCase.show) {
+                    document.getElementById(shownCase.myCaseId + "Arrow")!.style.transform = ""
+                }
+                setShownCase({show: true, myCaseId: detailedCaseInfo.myCase.id})
+            } else {
+                setLastEditCase(-1)
+            }
+        } else if (detailedCaseInfo.myCase.id >= 0) {
+            document.getElementById(detailedCaseInfo.myCase.id + "Arrow")!.style.transform = ""
+            setDetailedCaseInfo({
+                show: false, myCase: {
+                    id: -1,
+                    name: "",
+                    suite: -1,
+                    scenario: "",
+                    project: -1,
+                    setup: "",
+                    teardown: "",
+                    estimate: -1
+                }
+            })
+            setShownCase({show: false, myCaseId: -1})
+        }
+    }, [detailedCaseInfo])
+    console.log(selectedCases)
     return (
 
         <SplitterLayout customClassName={classes.splitter} primaryIndex={0} primaryMinSize={40} secondaryMinSize={35}
                         percentage>
-
-            <Grid style={{padding: "20px 35px 20px 24px"}}>
-                <Grid style={{display: "flex", flexDirection: "row", marginLeft: 17}}>
-                    <Link component="button" onClick={() => {
-                        openAll()
-                    }}>
-                        Раскрыть все
-                    </Link>
-                    <Link underline="none">&nbsp;&nbsp;|&nbsp;&nbsp;</Link>
-                    <Link component="button"
-                          onClick={() => {
-                              closeAll()
-                          }}>
-                        Закрыть все
-                    </Link>
-                </Grid>
-                <Table size={"small"} sx={{
-                    [`& .${tableCellClasses.root}`]: {
-                        borderBottom: "none",
-                    }
+            <Grid>
+                <Box sx={{
+                    boxShadow: 5,
+                    display: "flex", flexDirection: "row", position: "sticky", top: 0,
+                    backgroundColor: "white", border: "1px solid", zIndex: 1, height: 40
                 }}>
-                    <TableBody>
-                        {treeSuites.map((suite, index) => (
-                            <Row key={suite.id} row={suite}
-                                 setShowCreationCase={setShowCreationCase}
-                                 setShowCreationSuite={setShowCreationSuite}
-                                 setSelectedSuiteCome={setSelectedSuiteCome}
-                                 treeSuitesOpenMap={treeSuitesOpenMap}
-                                 setTreeSuitesOpenMap={setTreeSuitesOpenMap}
-                                 detailedCaseInfo={detailedCaseInfo}
-                                 setDetailedCaseInfo={setDetailedCaseInfo}
-                                 setInfoCaseForEdit={setInfoCaseForEdit}
-                            />
-                        ))}
-                    </TableBody>
-                </Table>
+                    <Grid style={{
+                        margin: 5
+                    }}>
+                        <Link style={{maxHeight: "50%", marginLeft: 5}} component="button" onClick={() => {
+                            openAll()
+                        }}>
+                            Раскрыть все
+                        </Link>
+                        <Link underline="none">&nbsp;&nbsp;|&nbsp;&nbsp;</Link>
+                        <Link style={{maxHeight: "50%"}} component="button"
+                              onClick={() => {
+                                  closeAll()
+                              }}>
+                            Закрыть все
+                        </Link>
+                        <IconButton size={"small"} disabled={!(selectedCases.length > 0)} onClick={() => {
+                            setOpenDialogDeletionElements(true)
+                        }} style={{marginLeft: 5}}>
+                            <DeleteIcon fontSize={"small"}/>
+                        </IconButton>
+                    </Grid>
+                </Box>
+                <Grid style={{padding: "0px 35px 20px 24px"}}>
+                    {memoizedValue}
+                </Grid>
+                <DeletionDialogElement openDialogDeletion={openDialogDeletion}
+                                       setOpenDialogDeletion={setOpenDialogDeletion}
+                                       componentForDeletion={componentForDeletion}
+                                       setTreeSuites={setTreeSuites}
+                                       selectedForDeletion={selectedCases}
+                                       setSelectedForDeletion={setSelectedCases}
+                />
+                <DeletionDialogElements openDialogDeletion={openDialogDeletionElements}
+                                        setOpenDialogDeletion={setOpenDialogDeletionElements}
+                                        selectedForDeletion={selectedCases}
+                                        setTreeSuites={setTreeSuites}
+                                        setSelectedForDeletion={setSelectedCases}
+                />
             </Grid>
             {detailedCaseInfo.show &&
             <Grid>

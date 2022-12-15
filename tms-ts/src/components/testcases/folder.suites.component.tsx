@@ -1,4 +1,4 @@
-import {Grid, IconButton, Input, InternalStandardProps as StandardProps, TextField} from "@mui/material";
+import {Grid, IconButton, Input} from "@mui/material";
 import Typography from '@mui/material/Typography';
 import React, {useEffect, useState} from "react";
 import {suite, treeSuite} from "./suites.component";
@@ -9,7 +9,6 @@ import SvgIcon, {SvgIconProps} from "@mui/material/SvgIcon";
 import {alpha, styled} from '@mui/material/styles';
 import {TreeItemProps, treeItemClasses} from '@mui/lab/TreeItem';
 import clsx from 'clsx';
-import useStyles from "../../styles/styles";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 
@@ -86,8 +85,7 @@ const CustomContent = React.forwardRef(function CustomContent(
         event: React.MouseEvent<HTMLDivElement, MouseEvent>
     ) => {
         handleSelection(event);
-        // @ts-ignore
-        document.getElementById(nodeId).scrollIntoView();
+        document.getElementById(nodeId)?.scrollIntoView();
     };
     return (
         <div

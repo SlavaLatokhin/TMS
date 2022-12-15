@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from "react";
 import useStyles from "../../styles/styles";
 import {
-    Alert, Box,
-    Button, Collapse,
+    Button,
     Dialog,
     FormControl,
     Grid,
-    InputLabel, MenuItem, Select, SelectChangeEvent,
+    InputLabel, MenuItem, Select,
     TextField,
     Typography
 } from "@mui/material";
@@ -47,18 +46,19 @@ const CreationSuite: React.FC<Props> = ({show, setShow, suites, selectedSuiteCom
     }
 
     const createSuite = () => {
+        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : 1}').id
         if (namePresence) {
             const suite = {
                 name: name,
                 parent: selectedSuite ? selectedSuite.id : null,
-                project: 1,
+                project: projectId,
             }
             SuiteCaseService.createSuite(suite).then(() => {
                 SuiteCaseService.getTreeSuites().then((response) => {
                     setTreeSuites(response.data)
-                    SuiteCaseService.getSuites().then((response) => {
-                        setSuites(response.data)
-                    })
+                })
+                SuiteCaseService.getSuites().then((response) => {
+                    setSuites(response.data)
                 })
             })
             setShow(false)
@@ -67,8 +67,7 @@ const CreationSuite: React.FC<Props> = ({show, setShow, suites, selectedSuiteCom
             setFillFieldName(false)
 
         } else {
-            // @ts-ignore
-            document.getElementById("nameTextField").focus();
+            document.getElementById("nameTextField")?.focus();
             setFillFieldName(true)
         }
     }
