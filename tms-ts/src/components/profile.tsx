@@ -140,7 +140,7 @@ const Profile: React.FC = () => {
                                        style={{margin: '10px 10px 10px 10px'}}
                                        value={lastName}
                                        onChange={handleChangeLastName}/>
-                            <TextField className={classes.centeredField} variant={"outlined"}
+                            <TextField type={"email"} className={classes.centeredField} variant={"outlined"}
                                        label={'Адрес электронной почты'}
                                        style={{margin: '10px 10px 10px 10px'}}
                                        value={email} onChange={handleChangeEmail}/>

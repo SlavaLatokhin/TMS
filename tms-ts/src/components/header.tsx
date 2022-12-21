@@ -213,17 +213,6 @@ const Header: React.FC = () => {
                                     }}
                                 > Профиль </Typography>
                             </MenuItem>
-                            <MenuItem key={"Настройки"} onClick={handleCloseUserMenu}>
-                                <Typography
-                                    textAlign="center"
-                                    component="a"
-                                    href={"/settings"}
-                                    sx={{
-                                        color: 'inherit',
-                                        textDecoration: 'none',
-                                    }}
-                                > Настройки </Typography>
-                            </MenuItem>
                             <MenuItem key={"Выйти"} onClick={handleLogout}>
                                 <Typography
                                     textAlign="center"
