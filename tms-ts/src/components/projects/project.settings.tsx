@@ -1,6 +1,6 @@
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import {Chip, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import React, {ChangeEvent, FormEvent, useEffect, useState} from "react";
 import useStyles from "../../styles/styles";
 import {Grid, Button, Dialog, IconButton, TextField, InputAdornment, Typography} from "@mui/material";
 import ProjectService from "../../services/project.service";
@@ -16,6 +16,8 @@ import CheckboxTree from 'react-checkbox-tree';
 import {param, testPlan} from "../models.interfaces";
 import TestPlanService from "../../services/testplan.service";
 import SuiteCaseService from "../../services/suite.case.service";
+import {XMLParser} from "fast-xml-parser";
+import {suite} from "../testcases/suites.component";
 
 interface Props {
     show: boolean;
@@ -183,6 +185,68 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
         }
     }
 
+    const parser = new XMLParser();
+    const [uploadedFile, setUploadedFile] = useState<File>()
+    const handleUploadFile = (event: ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.files) return;
+        setUploadedFile(event.target.files[0]);
+    }
+    const loadCases = (cases: any, suiteId: number) => {
+        let allCases = [cases["case"]]
+        if (Symbol.iterator in Object(cases["case"])) {
+            allCases = cases["case"]
+        }
+        Array.prototype.forEach.call(allCases, (testCase: { [key: string]: string; }) => {
+            const newCase = {
+                name: testCase["title"],
+                suite: suiteId,
+                project: projectValue.id,
+                scenario: "something"
+            }
+            SuiteCaseService.createCase(newCase).catch(e => console.log(e))
+        })
+    }
+    const loadSuites = (sections: any, parentId: number | null) => {
+        let allSections = [sections["section"]]
+        if (Symbol.iterator in Object(sections["section"])) {
+            allSections = sections["section"]
+        }
+        Array.prototype.forEach.call(allSections, (section: { [key: string]: string; }) => {
+            const suite = {
+                name: section["name"],
+                parent: parentId,
+                project: projectValue.id,
+            }
+            let suiteId = 0;
+            SuiteCaseService.createSuite(suite).then(() => {
+                SuiteCaseService.getSuites().then((response) => {
+                    const allSuites: suite[] = response.data
+                    allSuites.sort((a, b) => b.id - a.id)
+                    suiteId = allSuites.find((suite) => suite.name === section["name"])?.id ?? suiteId
+                    loadCases(section["cases"], suiteId)
+                    console.log(section["name"], section["sections"])
+                    if (!section["sections"]) return;
+                    loadSuites(section["sections"], suiteId)
+                })
+
+            }).catch(e => console.log(e))
+        })
+    }
+    const handleLoadTestCases = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const reader = new FileReader()
+        if (!uploadedFile) return;
+        reader.readAsText(uploadedFile)
+        reader.onload = function () {
+            if (!reader.result) return;
+            const suite = parser.parse(reader.result.toString().replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ""))["suite"]
+            loadSuites(suite["sections"], null)
+        };
+        reader.onerror = function () {
+            console.log(reader.error);
+        };
+    }
+
     useEffect(() => {
             TestPlanService.getParameters().then((response) => {
                 const localParams = response.data
@@ -304,6 +368,25 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 )}
                             </Grid>
                         </div>
+                    </div>
+                    <div style={{marginTop: "50px", display: 'flex', flexDirection: 'row'}}>
+                        <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}>
+                            <Typography variant="h6"
+                                        style={{
+                                            paddingTop: "14px"
+                                        }}>
+                                Импорт тест-кейсов (.xml)
+                            </Typography>
+                        </div>
+                        <form style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center"
+                        }} onSubmit={handleLoadTestCases}>
+                            <input style={{marginTop: "20px"}} type={"file"} onChange={handleUploadFile}/>
+                            <Button style={{marginTop: "20px"}} variant={"contained"} type={"submit"}>Загрузить</Button>
+                        </form>
                     </div>
                     {/*<Grid container spacing={2} className={classes.gridContent}>*/}
                     {/*    <Grid item xs={2}>*/}

@@ -1,6 +1,6 @@
-import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import React, {ChangeEvent, useEffect, useState} from 'react';
 import {
-    Checkbox, Chip, Dialog,
+    Checkbox, Chip,
     FormControlLabel,
     FormGroup,
     Grid,
@@ -29,10 +29,6 @@ import ProjectService from "../../services/project.service";
 import {statuses} from "../model.statuses";
 import useStyles from "../../styles/styles";
 import ProjectSettings from "./project.settings";
-import {XMLParser} from "fast-xml-parser";
-import SuiteCaseService from "../../services/suite.case.service";
-import {suite} from "../testcases/suites.component";
-import FileUploadIcon from '@mui/icons-material/FileUpload';
 
 const Project: React.FC = () => {
     const classes = useStyles();
@@ -42,69 +38,6 @@ const Project: React.FC = () => {
     labels.push(['ДАТА ИЗМЕНЕНИЯ', '#000000'], ['КЕМ ИЗМЕНЕНО', '#000000'])
     const minStatusIndex = 3;
     const maxStatusIndex = minStatusIndex + statuses.length - 1;
-
-    const parser = new XMLParser();
-    const [uploadedFile, setUploadedFile] = useState<File>()
-    const handleUploadFile = (event: ChangeEvent<HTMLInputElement>) => {
-        if (!event.target.files) return;
-        setUploadedFile(event.target.files[0]);
-    }
-    const loadCases = (cases: any, suiteId: number) => {
-        let allCases = [cases["case"]]
-        if (Symbol.iterator in Object(cases["case"])) {
-            allCases = cases["case"]
-        }
-        Array.prototype.forEach.call(allCases, (testCase: { [key: string]: string; }) => {
-            const newCase = {
-                name: testCase["title"],
-                suite: suiteId,
-                project: projectValue.id,
-                scenario: "something"
-            }
-            SuiteCaseService.createCase(newCase).catch(e => console.log(e))
-        })
-    }
-    const loadSuites = (sections: any, parentId: number | null) => {
-        let allSections = [sections["section"]]
-        if (Symbol.iterator in Object(sections["section"])) {
-            allSections = sections["section"]
-        }
-        Array.prototype.forEach.call(allSections, (section: { [key: string]: string; }) => {
-            const suite = {
-                name: section["name"],
-                parent: parentId,
-                project: projectValue.id,
-            }
-            let suiteId = 0;
-            SuiteCaseService.createSuite(suite).then(() => {
-                SuiteCaseService.getSuites().then((response) => {
-                    const allSuites: suite[] = response.data
-                    allSuites.sort((a, b) => b.id - a.id)
-                    suiteId = allSuites.find((suite) => suite.name === section["name"])?.id ?? suiteId
-                    loadCases(section["cases"], suiteId)
-                    console.log(section["name"], section["sections"])
-                    if (!section["sections"]) return;
-                    loadSuites(section["sections"], suiteId)
-                })
-
-            }).catch(e => console.log(e))
-        })
-    }
-    const handleLoadTestCases = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        const reader = new FileReader()
-        if (!uploadedFile) return;
-        reader.readAsText(uploadedFile)
-        reader.onload = function () {
-            if (!reader.result) return;
-            const suite = parser.parse(reader.result.toString().replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ""))["suite"]
-            loadSuites(suite["sections"], null)
-        };
-        reader.onerror = function () {
-            console.log(reader.error);
-        };
-    }
-    const [openDialog, setOpenDialog] = useState(false);
 
     const [isSwitched, setSwitch] = React.useState(false);
     const handleOnSwitch = (event: ChangeEvent<HTMLInputElement>) => setSwitch(event.target.checked);
@@ -297,27 +230,6 @@ const Project: React.FC = () => {
                         </div>)
                     : <></>}
             </Grid>
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-                <Paper style={{
-                    padding: "20px 20px 20px 20px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center"
-                }}>
-                    <h4>Импорт тест-кейсов</h4>
-                    <form style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center"
-                    }} onSubmit={handleLoadTestCases}>
-                        Выберите файл
-                        <input style={{marginTop: "20px"}} type={"file"} onChange={handleUploadFile}/>
-                        <Button style={{marginTop: "20px"}} variant={"contained"} type={"submit"}>Загрузить</Button>
-                    </form>
-                </Paper>
-            </Dialog>
             <Grid sx={{width: '100%', justifyContent: 'center', pt: '50px'}}>
                 <Paper
                     elevation={5}
@@ -336,10 +248,6 @@ const Project: React.FC = () => {
                                     style={{marginLeft: '10px'}}
                                     onClick={handleShowProjectSettings}
                             >Настройки</Button>
-                            <Button variant="outlined"
-                                    style={{marginLeft: '10px'}}
-                                    onClick={() => setOpenDialog(true)}
-                            ><FileUploadIcon/></Button>
                         </Stack>
                         <ProjectSettings show={showProjectSettings} setShow={setShowProjectSettings}/>
                         {showFilter ? filter : null}
