@@ -17,8 +17,12 @@ export default class TestPlanService {
         return testPlanData
     }
 
+    static editTestPlan(testplan: { parent: null | number; child_test_plans: number[]; name: string; test_cases: number[]; due_date: string; is_archive: boolean; project: number; started_at: string; id: number; parameters: number[]; url: string }) {
+        return axiosTMS.put("api/v1/testplans/" + testplan.id, testplan)
+    }
+
     static deleteTestPlan(id: number) {
-        return axiosTMS.delete("api/v1/testplans/" + id + "/")
+        return axiosTMS.delete("api/v1/testplans/" + id)
     }
 
     static getTreeTestPlans() {
@@ -35,5 +39,9 @@ export default class TestPlanService {
 
     static createTestPlan(testPlan: { name: string, project: number, parent: number | null, test_cases: number[], parameters: number[], started_at: string, due_date: string}) {
         return axiosTMS.post("api/v1/testplans/", testPlan)
+    }
+
+    static createTestResult(testResult: {status: number, comment: string, execution_time: number | null, user: number}, testId: number) {
+        return axiosTMS.post("api/v1/tests/" + testId + "/results/", testResult)
     }
 }

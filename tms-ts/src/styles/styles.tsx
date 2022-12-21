@@ -56,12 +56,14 @@ export default makeStyles({
             marginTop: 0
         }
     },
-    textFieldCreationCase: {
+    textFieldTestplansAndTests: {
         "& .MuiFormLabel-root": {
-            margin: 0
+            margin: 0,
+
         },
         maxWidth: "90%",
-    }, /*TODO переименовать в для тестпланов*/
+
+    },
     gridContent: {
         marginTop: 17,
     },

@@ -1,34 +1,122 @@
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import {Chip, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from "@mui/material";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import useStyles from "../../styles/styles";
 import {Grid, Button, Dialog, IconButton, TextField, InputAdornment, Typography} from "@mui/material";
+import ProjectService from "../../services/project.service";
+import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import {alpha} from "@material-ui/core";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
+import FolderCopyOutlinedIcon from "@mui/icons-material/FolderCopyOutlined";
+import BlockIcon from "@mui/icons-material/Block";
+import CheckboxTree from 'react-checkbox-tree';
+import {param, testPlan} from "../models.interfaces";
+import TestPlanService from "../../services/testplan.service";
+import SuiteCaseService from "../../services/suite.case.service";
 
 interface Props {
     show: boolean;
     setShow: (show: boolean) => void
 }
 
+interface Node {
+    label: string;
+    value: string;
+    children?: Array<Node>;
+    disabled?: boolean;
+    icon?: boolean
+    showCheckbox?: boolean;
+}
+
 const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
     const classes = useStyles()
 
-    const [tagInput, setTagInput] = useState("")
-    const [tag, setTag] = useState("")
-    const [tagPresence, setTagPresence] = useState(false)
-    const [tags, setTags] = useState<string []>([])
+    const [statusInput, setStatusInput] = useState("")
+    const [status, setStatus] = useState("")
+    const [statusPresence, setStatusPresence] = useState(false)
+    const defaultStatuses: { name: string, color: string }[] = [
+        {name: 'PASSED', color: '#24b124'}, {name: 'SKIPPED', color: '#c4af30'}, {name: 'FAILED', color: '#bd2828'},
+        {name: 'RETEST', color: '#6c6c6c'}, {name: 'UNTESTED', color: '#a5a4a4'}]
+    const [statuses, setStatuses] = useState<string[]>([])
 
     const [link, setLink] = useState("")
     const [links, setLinks] = useState<string []>([])
     const [linkPresence, setLinkPresence] = useState(false)
+    const projectValue = JSON.parse(localStorage.getItem("currentProject") ?? '')
+    const [projectName, setProjectName] = useState(projectValue.name)
 
-    const [suites, setSuites] = useState<string []>(["a", "b", "c", "d"])
-    const [selectedSuite, setSelectedSuite] = useState("a")
+    const [projectDescription, setProjectDescription] = React.useState(projectValue.description)
+
+
+
+    const [disable, setDisable] = useState(false)
+    const [paramsChecked, setParamsChecked] = useState<Array<string>>([])
+    const [paramsExpanded, setParamsExpanded] = useState<Array<string>>([])
+    const [params, setParams] = useState<param [] | null>(null)
+    const nodes = [{value: 'no', label: 'Без параметров', icon: <BlockIcon className={classes.icons}/>},
+        {value: 'all', label: 'Все параметры', children: nodesChildren(), disabled: disable}];
+
+
+    function nodesChildren() {
+        let arr: Node[] = [];
+        params?.map((param) => {
+            let flag = false
+            for (let node in arr) {
+                if (arr[node].label == param.group_name) {
+                    if (arr[node].children) {/*а это всегда true, но пусть будет*/
+                        arr[node].children?.push({
+                            value: String(param.id),
+                            label: param.data,
+                            disabled: disable,
+                            icon: false
+                        })
+                    }
+                    flag = true
+                }
+            }
+            if (!flag) {
+                arr.push({
+                    value: param.group_name,
+                    label: param.group_name,
+                    children: [{value: String(param.id), label: param.data, disabled: disable, icon: false}],
+                    disabled: disable
+                })
+            }
+        })
+
+        return arr
+    }
+
+
+    const onChangeProjectName = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setProjectName(e.target.value)
+    }
+
+    const onChangeProjectDescription = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setProjectDescription(e.target.value)
+    }
 
     const handleClose = () => {
-        setTag("")
-        setTagInput("")
-        setTags([])
-        setTagPresence(false)
+        setStatus("")
+        setStatusInput("")
+        setStatuses([])
+        setStatusPresence(false)
+        setLink("")
+        setLinkPresence(false)
+        setLinks([])
+        setShow(false)
+    }
+
+    const handlePatch = () => {
+        ProjectService.patchProject({name: projectName, description: projectDescription}, projectValue.id)
+            .then(r => {});
+        setStatus("")
+        setStatusInput("")
+        setStatuses([])
+        setStatusPresence(false)
         setLink("")
         setLinkPresence(false)
         setLinks([])
@@ -36,9 +124,9 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
     }
 
     const handleDelete = (index: number) => {
-        let oldTags = tags.slice()
-        oldTags.splice(index, 1)
-        setTags(oldTags)
+        let oldStatuses = statuses.slice()
+        oldStatuses.splice(index, 1)
+        setStatuses(oldStatuses)
     }
 
     const handleDeleteLink = (index: number) => {
@@ -47,10 +135,10 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
         setLinks(oldLinks)
     }
 
-    const createTag = () => {
-        setTags((prevState) => (prevState.concat([tag])))
-        setTagPresence(false)
-        setTagInput("")
+    const createStatus = () => {
+        setStatuses((prevState) => (prevState.concat([status])))
+        setStatusPresence(false)
+        setStatusInput("")
     }
 
     const createLink = () => {
@@ -60,8 +148,8 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
     }
 
     const keyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === "Enter" && tagPresence) {
-            createTag()
+        if (e.key === "Enter" && statusPresence) {
+            createStatus()
         }
     }
 
@@ -71,16 +159,16 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
         }
     }
 
-    const onChangeTagContent = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    const onChangeStatusContent = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const strInput = e.target.value.trimStart().replace(/ {2,}/g, ' ')
-        const tag = strInput.trimEnd()
-        if (tag.length > 0) {
-            setTag(tag)
-            setTagInput(strInput)
-            setTagPresence(true)
+        const status = strInput.trimEnd()
+        if (status.length > 0) {
+            setStatus(status)
+            setStatusInput(strInput)
+            setStatusPresence(true)
         } else {
-            setTagInput(strInput)
-            setTagPresence(false)
+            setStatusInput(strInput)
+            setStatusPresence(false)
         }
     }
 
@@ -95,11 +183,17 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
         }
     }
 
-    const chooseSuite = (e: SelectChangeEvent) => {
-        // const index: number = parseInt(e.target.value)
-        // const name = suites[index]
-        setSelectedSuite(e.target.value)
-    }
+    useEffect(() => {
+            TestPlanService.getParameters().then((response) => {
+                const localParams = response.data
+                setParams(localParams)
+            })
+                .catch((e) => {
+                    console.log(e);
+                });
+        }, []
+    )
+
 
     return (
         <Dialog
@@ -108,68 +202,80 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
             onClose={handleClose}
             classes={{paper: classes.paperCreationTestCase}}
         >
-            {/*<DialogTitle disableTypography className={classes.dialogTitle}>*/}
-            {/*    <h2>Создание тест-кейса</h2>*/}
-            {/*    <IconButton onClick={handleClose}>*/}
-            {/*        <CloseIcon/>*/}
-            {/*    </IconButton>*/}
-            {/*</DialogTitle>*/}
-
-            {/*<DialogContentText style={{fontSize: 20, color: "black"}}>*/}
             <Grid container style={{
                 position: "absolute",
                 height: "100%",
                 width: "100%"
             }}>
                 <Grid xs={9} item style={{padding: 20}}>
-                    <Grid>
-                        <Typography variant="h6">
-                            Название тест-кейса
-                        </Typography>
-                        <TextField
-                            className={classes.textFieldSelectCreationCaseSuite}
-                            variant="outlined"
-                            margin="normal"
-                            required
-                            fullWidth
-                            label="Введите название тест-кейса"
-                        />
-                    </Grid>
+                    <div style={{display: 'flex', flexDirection: 'row'}}>
+                        <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}>
+                            <Typography variant="h6" style={{paddingTop: "24px"}}>
+                                Название
+                            </Typography>
+                        </div>
 
-                    <Grid className={classes.gridContent}>
-                        <Typography variant="h6">
-                            Описание
-                        </Typography>
                         <TextField
                             className={classes.textFieldSelectCreationCaseSuite}
+                            style={{paddingRight: "8%"}}
                             variant="outlined"
                             margin="normal"
                             fullWidth
-                            label="Введите описание тест-кейса"
-                            multiline
-                            minRows={4}
-                            maxRows={5}
+                            value={projectName}
+                            label="Изменить название проекта"
+                            onChange={onChangeProjectName}
                         />
-                    </Grid>
-                    <Grid className={classes.gridContent}>
-                        <Typography variant="h6">
-                            Тэги
-                        </Typography>
+                    </div>
+
+                    <div style={{display: 'flex', flexDirection: 'row'}}>
+                        <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}>
+                            <Typography variant="h6" style={{paddingTop: "24px"}}>
+                                Описание
+                            </Typography>
+                        </div>
+
                         <TextField
-                            value={tagInput}
-                            onChange={(content) => onChangeTagContent(content)}
                             className={classes.textFieldSelectCreationCaseSuite}
+                            style={{paddingRight: "8%"}}
                             variant="outlined"
                             margin="normal"
                             fullWidth
-                            label="Введите тэг"
+                            value={projectDescription}
+                            label="Изменить описание проекта"
+                            multiline
+                            minRows={2}
+                            maxRows={5}
+                            onChange={onChangeProjectDescription}
+                        />
+                    </div>
+
+                    <div style={{display: 'flex', flexDirection: 'row'}}>
+                        <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}>
+                            <Typography variant="h6"
+                                        style={{
+                                            paddingTop: "14px"
+                                        }}>
+                                Статусы результатов
+                            </Typography>
+                        </div>
+
+                        <TextField
+                            value={statusInput}
+                            onChange={(content) => onChangeStatusContent(content)}
+                            className={classes.textFieldSelectCreationCaseSuite}
+                            style={{paddingRight: "8%"}}
+                            variant="outlined"
+                            margin="normal"
+                            fullWidth
+                            disabled
+                            label="Введите новый статус"
                             onKeyPress={(key) => keyPress(key)}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton size={"small"} onClick={() => {
-                                            if (tagPresence) {
-                                                createTag()
+                                            if (statusPresence) {
+                                                createStatus()
                                             }
                                         }}>
                                             <AddCircleIcon fontSize={"large"}/>
@@ -178,54 +284,88 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 ),
                             }}
                         />
-                        <Grid className={classes.stackTags}>
-                            {tags.map((tag, index) =>
-                                <Chip key={index} label={tag} style={{margin: 3, maxWidth: "95%"}}
-                                      onDelete={() => handleDelete(index)}/>
-                            )}
-                        </Grid>
-                    </Grid>
+                    </div>
+                    <div style={{display: 'flex', flexDirection: 'row'}}>
+                        <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}/>
+                        <div style={{paddingRight: "8%"}}>
+                            <Grid className={classes.stackTags}>
+                                {defaultStatuses.map((status, index) =>
+                                    <Chip key={index} label={status.name}
+                                          style={{
+                                              margin: 3,
+                                              maxWidth: "95%",
+                                              backgroundColor: status.color,
+                                              color: "white"
+                                          }}/>
+                                )}
+                                {statuses.map((status, index) =>
+                                    <Chip key={index} label={status} style={{margin: 3, maxWidth: "95%"}}
+                                          onDelete={() => handleDelete(index)}/>
+                                )}
+                            </Grid>
+                        </div>
+                    </div>
+                    {/*<Grid container spacing={2} className={classes.gridContent}>*/}
+                    {/*    <Grid item xs={2}>*/}
+                    {/*        <Typography variant="h6">*/}
+                    {/*            Параметры*/}
+                    {/*        </Typography>*/}
+                    {/*    </Grid>*/}
+                    {/*    <Grid item xs={10}>*/}
+                    {/*        <FormControl style={{minWidth: "50%"}} className={classes.textFieldSelectCreationCaseSuite}>*/}
+                    {/*            {params ? (<CheckboxTree*/}
+                    {/*                    nodes={nodes}*/}
+                    {/*                    checked={paramsChecked}*/}
+                    {/*                    expanded={paramsExpanded}*/}
+                    {/*                    // nativeCheckboxes={true}*/}
+                    {/*                    onCheck={(paramsChecked) => {*/}
+                    {/*                        setParamsChecked(paramsChecked)*/}
+                    {/*                        if (paramsChecked.find(x => x == 'no')) {*/}
+                    {/*                            setDisable(true)*/}
+                    {/*                            setParamsChecked(['no'])*/}
+                    {/*                            setParamsExpanded([])*/}
+                    {/*                        } else {*/}
+                    {/*                            setDisable(false)*/}
+                    {/*                        }*/}
+                    {/*                    }}*/}
+                    {/*                    onExpand={(paramsExpanded) => setParamsExpanded(paramsExpanded)}*/}
+                    {/*                    icons={{*/}
+                    {/*                        check: <CheckBoxOutlinedIcon className={classes.icons}/>,*/}
+                    {/*                        uncheck: <CheckBoxOutlineBlankIcon className={classes.icons}/>,*/}
+                    {/*                        halfCheck: <CheckBoxOutlinedIcon style={{color: alpha("#8956FF", 0.6)}}/>,*/}
+                    {/*                        expandClose: <KeyboardArrowRightIcon className={classes.icons}/>,*/}
+                    {/*                        expandOpen: <KeyboardArrowUpIcon className={classes.icons}/>,*/}
+                    {/*                        expandAll: <IndeterminateCheckBoxOutlinedIcon className={classes.icons}/>,*/}
+                    {/*                        collapseAll: <IndeterminateCheckBoxOutlinedIcon className={classes.icons}/>,*/}
+                    {/*                        parentClose: <FolderCopyOutlinedIcon className={classes.icons}/>,*/}
+                    {/*                        parentOpen: <FolderCopyOutlinedIcon className={classes.icons}/>,*/}
+                    {/*                        // leaf: <ArticleOutlinedIcon className={classes.icons}/>,*/}
+                    {/*                    }}*/}
+                    {/*                    // className={classes.tree}*/}
+                    {/*                />) :*/}
+                    {/*                (<CheckboxTree nodes={[{*/}
+                    {/*                    value: 'no',*/}
+                    {/*                    label: 'Без параметров',*/}
+                    {/*                    disabled: true,*/}
+                    {/*                    showCheckbox: false,*/}
+                    {/*                    icon: <BlockIcon className={classes.icons}/>*/}
+                    {/*                }]}*/}
+                    {/*                />)*/}
+                    {/*            }*/}
+
+                    {/*        </FormControl>*/}
+
+                    {/*    </Grid>*/}
+                    {/*</Grid>*/}
                 </Grid>
                 <Grid xs={3} item style={{
                     backgroundColor: "#eeeeee", paddingTop: 26, display: "flex",
                     flexDirection: "column", justifyContent: "space-between"
                 }}>
-                    <Grid style={{marginLeft: 15}}>
-                        <Grid style={{marginBottom: 34}}>
-                            <Typography style={{marginBottom: 10}}>
-                                Сьюта
-                            </Typography>
-
-                            <FormControl required style={{minWidth: "90%"}}>
-                                <InputLabel id="select-suite">Выберите сьюту</InputLabel>
-                                <Select
-                                    labelId="select-suite"
-                                    value={selectedSuite}
-                                    label="Выберите сьюту"
-                                    onChange={(e) => chooseSuite(e)}
-                                    renderValue={(selected) => <Grid>{selected}</Grid>}
-                                >
-                                    {suites.map((suite, index) => <MenuItem key={index}
-                                                                            value={suite}>{suite}</MenuItem>)}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid style={{marginBottom: 34}}>
+                    <div style={{marginLeft: 15}}>
+                        <div>
                             <Typography>
-                                Время выполнения
-                            </Typography>
-                            <TextField
-                                style={{marginTop: 10}}
-                                className={classes.textFieldSelectCreationCaseSuite}
-                                variant="outlined"
-                                margin="normal"
-                                fullWidth
-                                label="Введите время"
-                            />
-                        </Grid>
-                        <Grid>
-                            <Typography>
-                                Ссылки
+                                Участники
                             </Typography>
                             <TextField
                                 value={link}
@@ -235,7 +375,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 variant="outlined"
                                 margin="normal"
                                 fullWidth
-                                label="Введите URL"
+                                label="Введите имя/почту/ссылку "
                                 onKeyPress={(key) => keyPressLink(key)}
                                 InputProps={{
                                     endAdornment: (
@@ -270,13 +410,13 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                     </Grid>
                                 )}
                             </Grid>
-                        </Grid>
-                    </Grid>
-                    <Grid style={{textAlign: "center"}}>
-                        <Grid>
+                        </div>
+                    </div>
+                    <Grid>
+                        <div style={{marginBottom: 15, textAlign: "center"}}>
                             <Button onClick={handleClose} style={{
-                                marginRight: 7,
-                                marginBottom: 20,
+                                margin: "0px 5px 5px 5px",
+                                minWidth: 100,
                                 width: "40%",
                                 height: "45%",
                                 backgroundColor: "#FFFFFF",
@@ -285,9 +425,9 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                             >
                                 Отменить
                             </Button>
-                            <Button style={{
-                                marginLeft: 7,
-                                marginBottom: 20,
+                            <Button onClick={handlePatch} style={{
+                                margin: "0px 5px 5px 5px",
+                                minWidth: 100,
                                 width: "40%",
                                 height: "45%",
                                 backgroundColor: "#696969",
@@ -296,9 +436,10 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                             >
                                 Сохранить
                             </Button>
-                        </Grid>
+                        </div>
                     </Grid>
                 </Grid>
+
             </Grid>
         </Dialog>
     );

@@ -23,13 +23,56 @@ const TableTestPlans = (props: {
     const [selected, setSelected] = React.useState<number []>([]);
 
     useEffect(() => {
-        TestPlanService.getTestPlan(testplan.id).then((response) => {
-            setCurrentTestPlan(response.data)
-        })
-            .catch((e) => {
-                console.log(e);
-            });
-    })
+        if (!currentTestPlan) {
+            TestPlanService.getTestPlan(testplan.id).then((response) => {
+                setCurrentTestPlan(response.data)
+            })
+                .catch((e) => {
+                    console.log(e);
+                });
+        }
+    }, [currentTestPlan])
+
+    // console.log(currentTestPlan)
+    const getTestsResults = (currentTestPlan: testPlan | undefined) => {
+        const testsResults: { passed: number, skipped: number, failed: number, blocked: number, untested: number, broken: number } = {
+            passed: 0,
+            skipped: 0,
+            failed: 0,
+            blocked: 0,
+            untested: 0,
+            broken: 0
+        }
+        if (currentTestPlan?.tests) {
+            for (const cur_test of currentTestPlan?.tests) {
+                // console.log(cur_test.current_result)
+                if (typeof (cur_test.current_result) == "string") {
+                    if (cur_test.current_result == "Passed") {
+                        testsResults.passed++
+                    }
+                    if (cur_test.current_result == "Skipped") {
+                        testsResults.skipped++
+                    }
+                    if (cur_test.current_result == "Failed") {
+                        testsResults.failed++
+                    }
+                    if (cur_test.current_result == "Blocked") {
+                        testsResults.blocked++
+                    }
+                    if (cur_test.current_result == "Untested") {
+                        testsResults.untested++
+                    }
+                    if (cur_test.current_result == "Broken") {
+                        testsResults.broken++
+                    }
+                }
+                else if (!cur_test.current_result) {
+                    testsResults.untested++
+                }
+            }
+        }
+        return testsResults
+    }
 
     const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
         const selectedIndex = selected.indexOf(id);
@@ -83,7 +126,12 @@ const TableTestPlans = (props: {
                                 </Grid>
                             </TableCell>
                             <TableCell align="right" style={{width: "25%"}}>
-                                <BarChartComponent passed={20} failed={15} untested={30}/> {/*TODO*/}
+                                <BarChartComponent passed={getTestsResults(currentTestPlan).passed}
+                                                   skipped={getTestsResults(currentTestPlan).skipped}
+                                                   failed={getTestsResults(currentTestPlan).failed}
+                                                   blocked={getTestsResults(currentTestPlan).blocked}
+                                                   untested={getTestsResults(currentTestPlan).untested}
+                                                   broken={getTestsResults(currentTestPlan).broken}/> {/*TODO*/}
                             </TableCell>
                         </TableRow>
                     </TableBody>}

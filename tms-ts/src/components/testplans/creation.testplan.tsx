@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import useStyles from "../../styles/styles";
 import {
     Button,
@@ -39,6 +39,8 @@ interface Props {
     testPlans: testPlan[];
     params: param[] | null;
     treeSuites: treeSuite [];
+    isForEdit: testPlan | null;
+    setIsForEdit: (isForEdit: null) => void;
 }
 
 interface Node {
@@ -50,17 +52,22 @@ interface Node {
     showCheckbox?: boolean;
 }
 
-const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, treeSuites}) => {
+const CreationTestPlan: React.FC<Props> = ({
+                                               show,
+                                               setShow,
+                                               testPlans,
+                                               params,
+                                               treeSuites,
+                                               isForEdit,
+                                               setIsForEdit,
+                                           }) => {
     const classes = useStyles()
 
     const [link, setLink] = useState("")
     const [links, setLinks] = useState<string []>([])
     const [linkPresence, setLinkPresence] = useState(false)
 
-    const [selectedTestPlan, setSelectedTestPlan] = useState<{ id: number, name: string }>({
-        id: -1,
-        name: "Не выбрано"
-    })
+    const [selectedTestPlan, setSelectedTestPlan] = useState<{ id: number, name: string } | null>(null)
 
     const [name, setName] = useState("")
 
@@ -73,6 +80,27 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
 
     const [testsChecked, setTestsChecked] = useState<Array<string>>([])
     const [testsExpanded, setTestsExpanded] = useState<Array<string>>([])
+
+    // console.log(testsChecked)
+
+    useEffect(() => {
+        if (isForEdit) {
+            setName(isForEdit.name)
+            if (isForEdit.parent) {
+                const parent = testPlans.find(x => x.id == isForEdit.parent)
+                if (parent) {
+                    setSelectedTestPlan({id: isForEdit.parent, name: parent.title})
+                }
+            }
+            if (isForEdit.parameters) {
+                setParamsChecked(isForEdit.parameters.map(x => String(x)))
+            }
+            // console.log(isForEdit.tests)
+            setTestsChecked(isForEdit.tests.map(x => String(x.case.id)))
+            setStartDate(moment(isForEdit.started_at))
+            setEndDate(moment(isForEdit.due_date))
+        }
+    }, [isForEdit])
 
     const handleStartDate = (newValue: Moment | null) => {
         setStartDate(newValue);
@@ -95,6 +123,8 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
         setDisable(false)
         setTestsChecked([])
         setTestsExpanded([])
+        setIsForEdit(null)
+        setSelectedTestPlan(null)
     }
 
     const handleDeleteLink = (index: number) => {
@@ -124,9 +154,8 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
         setSelectedTestPlan({id: e.target.value.id, name: e.target.value.name})
     }
 
-    const onChangeName = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        let str = e.target.value
-        setName(str)
+    const onChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setName(e.target.value)
     }
 
     const keyPressLink = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -182,16 +211,20 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                 }
                 children = children.concat(testsNodes(suite.children))
                 arr.push({
-                    value: suite.name,
+                    value: "s" + suite.id,
                     label: suite.name,
                     children: children
                 })
             } else {
                 if (suite.test_cases.length != 0) {
                     let tests: Node[] = []
-                    suite.test_cases.map((test) => tests.push({value: String(test.id), label: test.name, icon: false}))
+                    suite.test_cases.map((test) => tests.push({
+                        value: String(test.id),
+                        label: test.name,
+                        icon: false
+                    }))
                     arr.push({
-                        value: suite.name,
+                        value: "s" + suite.id,
                         label: suite.name,
                         children: tests,
                     })
@@ -216,19 +249,31 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
         const testPlan = {
             name: name,
             project: 1,
-            parent: selectedTestPlan.id == -1 ? null : selectedTestPlan.id,
+            parent: selectedTestPlan ? selectedTestPlan.id : null,
             test_cases: tests,
             parameters: params,
             started_at: startDate ? startDate.format('YYYY-MM-DDTHH:mm') : "01.01.1970",
             due_date: endDate ? endDate.format('YYYY-MM-DDTHH:mm') : "01.01.1970",
         }
-        TestPlanService.createTestPlan(testPlan).then((response) => {
-            // console.log(response.data[0])
-            window.location.assign("/testplans/" + response.data[0].id)
-        })
-            .catch((e) => {
-                console.log(e);
-            });
+        if (isForEdit) {
+            TestPlanService.editTestPlan({
+                ...testPlan,
+                id: isForEdit.id,
+                child_test_plans: isForEdit.child_test_plans,
+                url: isForEdit.url,
+                is_archive: isForEdit.is_archive
+            }).catch((e) => {
+                console.log(e)
+            })
+        } else {
+            TestPlanService.createTestPlan(testPlan).then((response) => {
+                // console.log(response.data[0])
+                window.location.assign("/testplans/" + response.data[0].id)
+            })
+                .catch((e) => {
+                    console.log(e);
+                });
+        }
         handleClose()
 
     }
@@ -254,10 +299,13 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                         </Grid>
                         <Grid item xs={7}>
                             <TextField
-                                className={classes.textFieldCreationCase}
-                                onChange={(content) => onChangeName(content)}
+                                id="nameTestPlanTextField"
+                                className={classes.textFieldTestplansAndTests}
+                                onChange={onChangeName}
                                 variant="outlined"
+                                value={name}
                                 margin="normal"
+                                autoComplete="off"
                                 required
                                 fullWidth
                                 label="Введите название тест-плана"
@@ -272,7 +320,7 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                             </Typography>
                         </Grid>
                         <Grid item xs={10}>
-                            <FormControl style={{minWidth: "50%"}} className={classes.textFieldCreationCase}>
+                            <FormControl style={{minWidth: "50%"}} className={classes.textFieldTestplansAndTests}>
                                 {params ? (<CheckboxTree
                                         nodes={nodes}
                                         checked={paramsChecked}
@@ -324,7 +372,7 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                             </Typography>
                         </Grid>
                         <Grid item xs={10}>
-                            <FormControl style={{minWidth: "50%"}} className={classes.textFieldCreationCase}>
+                            <FormControl style={{minWidth: "50%"}} className={classes.textFieldTestplansAndTests}>
                                 {treeSuites ? (<CheckboxTree
                                         nodes={testsNodes(treeSuites)}
                                         checked={testsChecked}
@@ -370,11 +418,11 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                                 Родительский тест-план
                             </Typography>
 
-                            <FormControl style={{minWidth: "90%"}} className={classes.textFieldCreationCase}>
+                            <FormControl style={{minWidth: "90%"}} className={classes.textFieldTestplansAndTests}>
                                 <InputLabel id="select-test-plan">Выберите тест-план</InputLabel>
                                 <Select
-                                    labelId="select-suite"
-                                    value={selectedTestPlan.name}
+                                    labelId="select-test-plan"
+                                    value={selectedTestPlan ? selectedTestPlan.name : "Не выбрано"}
                                     label="Выберите тест-план"
                                     onChange={(e) => chooseTestPlan(e)}
                                     renderValue={(selected) => <Grid>{selected}</Grid>}
@@ -391,7 +439,7 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                                     inputFormat="DD/MM/YYYY"
                                     value={startDate}
                                     onChange={handleStartDate}
-                                    className={classes.textFieldCreationCase}
+                                    className={classes.textFieldTestplansAndTests}
                                     renderInput={(params) => <TextField {...params} />}
                                 />
                             </LocalizationProvider>
@@ -403,12 +451,12 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                                     inputFormat="DD/MM/YYYY"
                                     value={endDate}
                                     onChange={handleEndDate}
-                                    className={classes.textFieldCreationCase}
+                                    className={classes.textFieldTestplansAndTests}
                                     renderInput={(params) => <TextField {...params} />}
                                 />
                             </LocalizationProvider>
                         </Grid>
-                        <Grid>
+                        {/*<Grid>
                             <Typography>
                                 Ссылки
                             </Typography>
@@ -416,7 +464,7 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                                 value={link}
                                 onChange={(content) => onChangeLinkContent(content)}
                                 style={{marginTop: 10}}
-                                className={classes.textFieldCreationCase}
+                                className={classes.textFieldTestplansAndTests}
                                 variant="outlined"
                                 margin="normal"
                                 fullWidth
@@ -455,7 +503,7 @@ const CreationTestPlan: React.FC<Props> = ({show, setShow, testPlans, params, tr
                                     </Grid>
                                 )}
                             </Grid>
-                        </Grid>
+                        </Grid>*/}
                     </Grid>
                     <Grid style={{textAlign: "center"}}>
                         <Grid>

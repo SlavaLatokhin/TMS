@@ -16,7 +16,7 @@ function App() {
     const token = AuthService.getCurrentAccessToken()
     return (
         <div>
-            {token ? <Header/> : <div/>}
+            <Header/>
             <Routes>
                 <Route path={"/login"} element={token ? <Navigate to="/"/> : <Login/>}/>
                 <Route path={"/"} element={token ? <ProjectSelection/> : <Navigate to="/login"/>}/>

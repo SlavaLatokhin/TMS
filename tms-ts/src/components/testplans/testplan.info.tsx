@@ -1,5 +1,6 @@
 import {Grid} from "@material-ui/core";
 import {
+    Button,
     Checkbox,
     Chip,
     FormControlLabel,
@@ -14,12 +15,21 @@ import {
 } from "@mui/material";
 import moment from "moment";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import React from "react";
+import React, {useState} from "react";
 import useStyles from "../../styles/styles";
 import {test, testPlan} from "../models.interfaces";
+import EditIcon from "@mui/icons-material/Edit";
 
-const TestplanInfo = (props: { currentTestPlan: testPlan }) => {
-    const {currentTestPlan} = props;
+const TestplanInfo = (props: { currentTestPlan: testPlan, setShowCreationTestPlan: (show: boolean) => void, setIsForEdit: (isForEdit: testPlan) => void, detailedTestInfo: { show: boolean, test: test } | null, setDetailedTestInfo: (data: { show: boolean, test: test }) => void, showEnterResult: boolean, setShowEnterResult: (show: boolean) => void }) => {
+    const {
+        currentTestPlan,
+        setShowCreationTestPlan,
+        setIsForEdit,
+        detailedTestInfo,
+        setDetailedTestInfo,
+        showEnterResult,
+        setShowEnterResult,
+    } = props;
     const classes = useStyles()
 
     const statuses: { id: number, name: string, color: string }[] = [{
@@ -33,8 +43,8 @@ const TestplanInfo = (props: { currentTestPlan: testPlan }) => {
     }, {id: 5, name: 'Untested', color: '#a5a4a4'}, {id: 3, name: "Broken", color: '#724127'}]
 
     function getCurrentResult(i: test) {
-        const current_result = i.test_results.find(x => x.id == Math.max(...i.test_results.map(el => el.id)));
-        const curRes = statuses.find(x => x.id == current_result?.status)
+        const currentResult = i.test_results.find(x => x.id == Math.max(...i.test_results.map(el => el.id)));
+        const curRes = statuses.find(x => x.id == currentResult?.status)
         return curRes ? curRes :
             {
                 id: 5,
@@ -46,9 +56,21 @@ const TestplanInfo = (props: { currentTestPlan: testPlan }) => {
     return (
         <Grid style={{paddingBottom: 20}}>
             <Grid style={{paddingBottom: 20}}>
-                <Typography variant="h6" style={{padding: 10}}>
-                    {currentTestPlan.title}
-                </Typography>
+                <Grid container style={{paddingBottom: 10}} spacing={2}>
+                    <Grid item>
+                        <Typography variant="h6" style={{padding: 0}}>
+                            {currentTestPlan.title}
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <IconButton size={"small"} onClick={() => {
+                            setShowCreationTestPlan(true)
+                            setIsForEdit(currentTestPlan)
+                        }}>
+                            <EditIcon fontSize={"small"}/>
+                        </IconButton>
+                    </Grid>
+                </Grid>
                 <Typography>
                     {"Дата начала: " + moment(currentTestPlan.started_at, 'YYYY-MM-DDTHH:mm').format('MMMM D, YYYY HH:mm')}
                 </Typography>
@@ -78,24 +100,52 @@ const TestplanInfo = (props: { currentTestPlan: testPlan }) => {
                                     </TableCell>
                                     {test.test_results &&
                                     <TableCell className={classes.tableCellTests}>
+                                        {/*<Button>*/}
                                         <Chip key={index} label={getCurrentResult(test).name}
+                                              onClick={() => {
+                                                  // if (!showEnterResult) {
+                                                  setDetailedTestInfo({
+                                                      show: true,
+                                                      test: test
+                                                  })
+                                                  // }
+                                                  test.id == detailedTestInfo?.test.id ? setShowEnterResult(!showEnterResult) : setShowEnterResult(true)
+
+                                              }}
                                               style={{
                                                   margin: 3,
                                                   maxWidth: "95%",
                                                   backgroundColor: getCurrentResult(test).color,
                                                   color: "white"
                                               }}/>
+                                        {/*</Button>*/}
 
                                     </TableCell>}
-                                    <TableCell className={classes.tableCellTests}>
+                                    {(!detailedTestInfo || !detailedTestInfo.show) &&
+                                    (< TableCell className={classes.tableCellTests}>
                                         {moment(test.updated_at).format('DD/MM/YYYY')}
-                                    </TableCell>
-                                    <TableCell className={classes.tableCellTests}>
+                                    </TableCell>)}
+                                    {(!detailedTestInfo || !detailedTestInfo.show) &&
+                                    (<TableCell className={classes.tableCellTests}>
                                         {test.user ? test.user : "Не назначен"}
-                                    </TableCell>
+                                    </TableCell>)}
+
                                     <TableCell className={classes.tableCellTests}>
-                                        <IconButton>
-                                            <KeyboardArrowRightIcon/>
+                                        <IconButton size={"small"} onClick={() => {
+                                            detailedTestInfo ?
+                                                detailedTestInfo.test.id == test.id ?
+                                                    setDetailedTestInfo({
+                                                        show: !detailedTestInfo.show,
+                                                        test: test
+                                                    }) : setDetailedTestInfo({
+                                                        show: true,
+                                                        test: test
+                                                    }) : setDetailedTestInfo({show: true, test: test})
+                                        }}>
+                                            <KeyboardArrowRightIcon sx={{
+                                                transform: (test.id == detailedTestInfo?.test.id && detailedTestInfo?.show) ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                transition: '0.2s',
+                                            }}/>
                                         </IconButton>
                                     </TableCell>
                                 </TableRow>

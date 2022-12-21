@@ -53,17 +53,22 @@ class axiosTMS {
     }
 
     static get(url: string) {
-        return this.request('get', url,  null)
+        return this.request('get', url, null)
     }
 
     static post(url: string, data: any) {
         data = data || {}
-        return this.request('post', url,  data)
+        return this.request('post', url, data)
+    }
+
+    static patch(url: string, data: any) {
+        data = data || {}
+        return this.request('patch', url, data)
     }
 
     static put(url: string, data: any) {
         data = data || {}
-        return this.request('put', url,  data)
+        return this.request('put', url, data)
     }
 
     static delete(url: string) {

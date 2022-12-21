@@ -28,6 +28,7 @@ import {test, testPlan, user} from "../models.interfaces";
 import ProjectService from "../../services/project.service";
 import {statuses} from "../model.statuses";
 import useStyles from "../../styles/styles";
+import ProjectSettings from "./project.settings";
 import {XMLParser} from "fast-xml-parser";
 import SuiteCaseService from "../../services/suite.case.service";
 import {suite} from "../testcases/suites.component";
@@ -113,7 +114,10 @@ const Project: React.FC = () => {
     const [endDate, setEndDate] = React.useState<Moment | null>(moment());
     const handleChangeStartDate = (newValue: Moment | null) => setStartDate(newValue);
     const handleChangeEndDate = (newValue: Moment | null) => setEndDate(newValue);
-    const handleOnOpenProjectSettings = () => navigate('/projectSettings');
+    const [showProjectSettings, setShowProjectSettings] = useState(false)
+    const handleShowProjectSettings = () => {
+        setShowProjectSettings(true)
+    }
     const handleOnShowStatus = (status: string) => {
         setStatusesToShow({...statusesShow, [status]: !statusesShow[status]})
     };
@@ -330,13 +334,14 @@ const Project: React.FC = () => {
                                     onClick={handleOnOpenFilter}>Фильтр</Button>
                             <Button variant="contained"
                                     style={{marginLeft: '10px'}}
-                                    onClick={handleOnOpenProjectSettings}
+                                    onClick={handleShowProjectSettings}
                             >Настройки</Button>
                             <Button variant="outlined"
                                     style={{marginLeft: '10px'}}
                                     onClick={() => setOpenDialog(true)}
                             ><FileUploadIcon/></Button>
                         </Stack>
+                        <ProjectSettings show={showProjectSettings} setShow={setShowProjectSettings}/>
                         {showFilter ? filter : null}
                         <TableContainer component={Paper}>
                             <Table stickyHeader>

@@ -9,7 +9,7 @@ export interface testResult {
     test_case_version: number;
     created_at: string,
     updated_at: string;
-    execution_time: null;
+    execution_time?: number;
 }
 
 export interface myCase {
@@ -18,7 +18,9 @@ export interface myCase {
     suite: number;
     scenario: string;
     project: number;
-    estimate: number
+    estimate: number | null;
+    teardown: string;
+    setup: string;
     url?: string;
 }
 
@@ -29,7 +31,7 @@ export interface test {
     project: number;
     test_results: testResult[];
     current_result: testResult;
-    user: number;
+    user: number | null;
     is_archive: boolean;
     updated_at?: string;
     created_at: string
@@ -47,7 +49,7 @@ export interface testPlan {
     name: string,
     project: number,
     parent: number | null,
-    parameters: param[] | null,
+    parameters: number[] | null,
     tests: test[],
     started_at: string,
     due_date: string,
