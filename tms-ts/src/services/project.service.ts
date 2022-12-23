@@ -21,4 +21,8 @@ export default class ProjectService {
     static createProject(project: { name: string, description: string }) {
         return axiosTMS.post("api/v1/projects/", project)
     }
+
+    static patchProject(project: { name: string, description: string }, id: number) {
+        return axiosTMS.patch("api/v1/projects/" + id.toString() + "/", project)
+    }
 }

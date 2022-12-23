@@ -1,6 +1,6 @@
 import React, {ChangeEvent, useEffect, useState} from 'react';
 import {
-    Checkbox,
+    Checkbox, Chip,
     FormControlLabel,
     FormGroup,
     Grid,
@@ -26,16 +26,18 @@ import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
 import {useNavigate} from "react-router-dom";
 import {test, testPlan, user} from "../models.interfaces";
 import ProjectService from "../../services/project.service";
+import {statuses} from "../model.statuses";
+import useStyles from "../../styles/styles";
+import ProjectSettings from "./project.settings";
 
 const Project: React.FC = () => {
+    const classes = useStyles()
     const navigate = useNavigate();
-    const labels = [['НАЗВАНИЕ ТЕСТ-ПЛАНА', '#000000'], ['ВСЕГО ТЕСТОВ', '#000000'], ['PASSED', '#24b124'],
-        ['SKIPPED', '#c4af30'], ['FAILED', '#bd2828'], ['RETEST', '#6c6c6c'],
-        ['ДАТА ИЗМЕНЕНИЯ', '#000000'], ['КЕМ ИЗМЕНЕНО', '#000000']];
-    const checkboxesLabels = ["passed", "skipped", "failed", "retest"];
-    const getMinStatusIndex = () => labels.findIndex((value) => checkboxesLabels.includes(value[0].toLowerCase()))
-    const minStatusIndex = getMinStatusIndex();
-    const maxStatusIndex = minStatusIndex + checkboxesLabels.length - 1;
+    const labels = [['НАЗВАНИЕ ТЕСТ-ПЛАНА', '#000000'], ['ВСЕГО ТЕСТОВ', '#000000']];
+    statuses.map((status) => labels.push([status.name.toUpperCase(), status.color]))
+    labels.push(['ДАТА ИЗМЕНЕНИЯ', '#000000'], ['КЕМ ИЗМЕНЕНО', '#000000'])
+    const minStatusIndex = 2;
+    const maxStatusIndex = minStatusIndex + statuses.length - 1;
 
     const [isSwitched, setSwitch] = React.useState(false);
     const handleOnSwitch = (event: ChangeEvent<HTMLInputElement>) => setSwitch(event.target.checked);
@@ -45,7 +47,10 @@ const Project: React.FC = () => {
     const [endDate, setEndDate] = React.useState<Moment | null>(moment());
     const handleChangeStartDate = (newValue: Moment | null) => setStartDate(newValue);
     const handleChangeEndDate = (newValue: Moment | null) => setEndDate(newValue);
-    const handleOnOpenProjectSettings = () => navigate('/projectSettings');
+    const [showProjectSettings, setShowProjectSettings] = useState(false)
+    const handleShowProjectSettings = () => {
+        setShowProjectSettings(true)
+    }
     const handleOnShowStatus = (status: string) => {
         setStatusesToShow({...statusesShow, [status]: !statusesShow[status]})
     };
@@ -58,15 +63,13 @@ const Project: React.FC = () => {
     const projectValue = JSON.parse(localStorage.getItem("currentProject") ?? '')
     const currentUsername = localStorage.getItem('currentUsername')
 
-    const tableData = testPlans.map((value, indexOfTestPlan) => {
+    let dataForLineChart: test[] = []
+    const projectTableData = testPlans.map((value, indexOfTestPlan) => {
         testPlanDates.push(value.started_at)
         const results: { [key: string]: number; } = {
             "all": value.tests.length,
-            "passed": 0,
-            "skipped": 0,
-            "failed": 0,
-            "retest": 0,
         }
+        statuses.map((status) => results[status.name.toLowerCase()] = 0)
         value.tests.sort((a, b) =>
             moment(b.updated_at, "YYYY-MM-DDThh:mm").valueOf() - moment(a.updated_at, "YYYY-MM-DDThh:mm").valueOf())
         testPlanDates[testPlanDates.length - 1] = value.tests[0]?.updated_at ?? testPlanDates[testPlanDates.length - 1]
@@ -77,26 +80,33 @@ const Project: React.FC = () => {
         const editor = (editorIds[indexOfTestPlan] != null) ?
             users.find((value) => value.id === editorIds[indexOfTestPlan]) : null
         const editorName = (editor != null) ? editor.username : "Не назначен"
+        dataForLineChart = dataForLineChart.concat(value.tests)
         value.tests.forEach((test) => {
-            results[test.current_result?.status]++
+            test.current_result ? results[String(test.current_result).toLowerCase()]++ : results["untested"]++
         });
-        return [value.name, results.all, results.passed, results.skipped, results.failed, results.retest, testPlanDates[testPlanDates.length - 1], editorName]
+
+        const toReturn = [value.name, results.all]
+        statuses.map((status) => toReturn.push(results[status.name.toLowerCase()]))
+        toReturn.push(testPlanDates[testPlanDates.length - 1], editorName)
+        return toReturn
     });
-    tableData.sort(([, , , , , , firstDate,], [, , , , , , secondDate,]) =>
+    projectTableData.sort(([, , , , , , firstDate,], [, , , , , , secondDate,]) =>
         (moment(secondDate, "YYYY-MM-DDThh:mm").valueOf() - moment(firstDate, "YYYY-MM-DDThh:mm").valueOf()))
-    const personalTableData = tableData.filter((value) => value[value.length - 1] == currentUsername)
+    const personalTableData = projectTableData.filter((value) => value[value.length - 1] === currentUsername)
 
     const [statusesShow, setStatusesToShow] = React.useState<{ [key: string]: boolean; }>(
-        {
-            "passed": true,
-            "skipped": true,
-            "failed": true,
-            "retest": true
-        }
+        {}
     );
-    const charts = [<LineChartComponent tests={tests}/>, <PieChartComponent tests={tests}/>];
+
+    const charts = [<LineChartComponent tests={dataForLineChart}/>, <PieChartComponent tests={tests}/>];
 
     useEffect(() => {
+        statuses.forEach((status) => {
+            const temporaryValue = statusesShow
+            temporaryValue[status.name.toLowerCase()] = true
+            setStatusesToShow(temporaryValue)
+        })
+
         ProjectService.getTestPlans().then((response) => {
             const testPlansData: testPlan[] = response.data
             setTestPlans(testPlansData.filter((value) => value.project === projectValue.id))
@@ -143,31 +153,40 @@ const Project: React.FC = () => {
         </Zoom>
     </Stack>
 
-    const filter = <Zoom in={showFilter} style={{marginBottom: '10px'}}>
+    const filter = <Zoom in={showFilter} style={{marginBottom: '10px', marginTop: "10px"}}>
         <Grid sx={{display: 'flex', justifyContent: 'center'}}>
             <FormGroup sx={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}}>
-                {checkboxesLabels.map((value) =>
-                    <FormControlLabel
-                        control={<Checkbox checked={statusesShow[value]} onClick={() => handleOnShowStatus(value)}/>}
-                        label={value.toUpperCase()}/>
+                {statuses.map((status, index) =>
+                    <FormControlLabel key={index}
+                                      control={<Checkbox checked={statusesShow[status.name.toLowerCase()]}
+                                                         onClick={() => handleOnShowStatus(status.name.toLowerCase())}/>}
+                                      label={<Chip key={index} label={status.name.toUpperCase()}
+                                                   style={{
+                                                       margin: 3,
+                                                       maxWidth: "95%",
+                                                       backgroundColor: status.color,
+                                                       color: "white"
+                                                   }}/>}/>
                 )}
                 <LocalizationProvider dateAdapter={AdapterMoment}>
                     <div style={{marginLeft: '10px'}}>
                         <DesktopDatePicker
+                            className={classes.centeredField}
                             label="Выберите дату начала"
                             inputFormat="DD/MM/YYYY"
                             value={startDate}
                             onChange={handleChangeStartDate}
-                            renderInput={(params) => <TextField {...params} />}
+                            renderInput={(params) => <TextField className={classes.centeredField} {...params} />}
                         />
                     </div>
                     <div style={{marginLeft: '10px'}}>
                         <DesktopDatePicker
+                            className={classes.centeredField}
                             label="Выберите дату окончания"
                             inputFormat="DD/MM/YYYY"
                             value={endDate}
                             onChange={handleChangeEndDate}
-                            renderInput={(params) => <TextField {...params} />}
+                            renderInput={(params) => <TextField className={classes.centeredField} {...params} />}
                         />
                     </div>
                 </LocalizationProvider>
@@ -175,11 +194,36 @@ const Project: React.FC = () => {
         </Grid>
     </Zoom>
 
+    const tableDataToShow = <TableBody>
+        {(isSwitched ? personalTableData : projectTableData)?.map(
+            (testplanData) =>
+                (!moment(testplanData[testplanData.length - 2], "YYYY-MM-DDThh:mm").isBetween(startDate, endDate, undefined, "[]")) ? null :
+                    (<TableRow>
+                        {testplanData.slice(0, testplanData.length - 2).concat([moment(testplanData[testplanData.length - 2], "YYYY-MM-DDThh:mm")
+                            .format("DD.MM.YYYY"), testplanData[testplanData.length - 1]]).map(
+                            (value, index) => {
+                                if (index < minStatusIndex || index > maxStatusIndex) {
+                                    return <TableCell>
+                                        <Typography align={'center'}>{value}</Typography>
+                                    </TableCell>
+                                }
+                                if (statusesShow[statuses[index - minStatusIndex].name.toLowerCase()]) {
+                                    return <TableCell>
+                                        <Typography align={'center'}>{value}</Typography>
+                                    </TableCell>
+                                }
+                                return <></>;
+                            }
+                        )}
+                    </TableRow>)
+        )}
+    </TableBody>
+
     return (
         <div style={{display: "flex", flexDirection: "column"}}>
             <Grid sx={{display: 'flex', justifyContent: 'center', mt: '20px'}}>
-                {tests.length > 0 ? charts.map((chart) =>
-                        <div style={{width: "45%"}}>
+                {tests.length > 0 ? charts.map((chart, index) =>
+                        <div key={index} style={{width: "45%"}}>
                             {chart}
                         </div>)
                     : <></>}
@@ -193,64 +237,47 @@ const Project: React.FC = () => {
                         padding: "20px 10px 10px 10px",
                     }}>
                     <Stack>
-                        <Stack direction={"row"} margin={"auto"} mb={'10px'}>
+                        <Stack display={'flex'} flexDirection={"row"} justifyContent={"center"} mb={'10px'}>
                             {isSwitched ? switchedActivityTitle : activityTitle}
                             <Button variant="contained"
                                     style={{marginLeft: '10px'}}
                                     onClick={handleOnOpenFilter}>Фильтр</Button>
                             <Button variant="contained"
                                     style={{marginLeft: '10px'}}
-                                    onClick={handleOnOpenProjectSettings}
+                                    onClick={handleShowProjectSettings}
                             >Настройки</Button>
                         </Stack>
+                        <ProjectSettings show={showProjectSettings} setShow={setShowProjectSettings}/>
                         {showFilter ? filter : null}
                         <TableContainer component={Paper}>
                             <Table stickyHeader>
                                 <TableHead sx={{mb: '20px'}}>
                                     <TableRow>
-                                        {labels.map(([value, color]) => {
-                                            if (!checkboxesLabels.includes(value.toLowerCase())) {
-                                                return <TableCell>
+                                        {labels.map(([value, color], index) => {
+                                            if (!statuses.find((status) => status.name.toLowerCase() === value.toLowerCase())) {
+                                                return <TableCell key={index}>
                                                     <Typography color={color} fontWeight={'bolder'}
                                                                 align={'center'}>{value}</Typography>
                                                 </TableCell>
                                             }
                                             if (statusesShow[value.toLowerCase()]) {
-                                                return <TableCell>
-                                                    <Typography color={color} fontWeight={'bolder'}
-                                                                align={'center'}>{value}</Typography>
+                                                return <TableCell key={index}>
+                                                    <div style={{textAlign: "center"}}>
+                                                        <Chip key={index} label={value}
+                                                              style={{
+                                                                  margin: 3,
+                                                                  maxWidth: "95%",
+                                                                  backgroundColor: statuses[index - minStatusIndex].color,
+                                                                  color: "white"
+                                                              }}/>
+                                                    </div>
                                                 </TableCell>
                                             }
                                             return <></>;
                                         })}
                                     </TableRow>
                                 </TableHead>
-
-                                <TableBody>
-                                    {(isSwitched ? personalTableData : tableData)?.map(
-                                        ([title, all, passed, skipped, failed, retest, date, tester]) =>
-                                            (!moment(date, "YYYY-MM-DDThh:mm").isBetween(startDate, endDate, undefined, "[]")) ? null :
-                                                (<TableRow>
-                                                    {[title, all, passed, skipped, failed, retest,
-                                                        moment(date, "YYYY-MM-DDThh:mm")
-                                                            .format("DD.MM.YYYY"), tester].map(
-                                                        (value, index) => {
-                                                            if (index < minStatusIndex || index > maxStatusIndex) {
-                                                                return <TableCell>
-                                                                    <Typography align={'center'}>{value}</Typography>
-                                                                </TableCell>
-                                                            }
-                                                            if (statusesShow[checkboxesLabels[index - minStatusIndex]]) {
-                                                                return <TableCell>
-                                                                    <Typography align={'center'}>{value}</Typography>
-                                                                </TableCell>
-                                                            }
-                                                            return <></>;
-                                                        }
-                                                    )}
-                                                </TableRow>)
-                                    )}
-                                </TableBody>
+                                {tableDataToShow}
                             </Table>
                         </TableContainer>
                     </Stack>

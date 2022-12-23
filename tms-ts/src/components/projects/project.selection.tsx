@@ -4,11 +4,12 @@ import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRou
 import BookIcon from '@mui/icons-material/Book';
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import {ButtonBase, Collapse, Link} from "@mui/material";
+import {ButtonBase, Collapse, Grid, Link} from "@mui/material";
 import {KeyboardArrowDown} from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import CreationProject from "./creation.project";
 import ProjectService from "../../services/project.service";
+import {useNavigate} from "react-router-dom";
 
 
 export interface project {
@@ -18,6 +19,7 @@ export interface project {
 }
 
 const ProjectSelection: React.FC = () => {
+    const navigate = useNavigate()
     const classes = useStyles();
     const [expanded, setExpanded] = React.useState(false);
     const [projects, setProjects] = React.useState<project[]>([]);
@@ -25,12 +27,13 @@ const ProjectSelection: React.FC = () => {
     useEffect(() => {
         ProjectService.getProjects().then((response) =>
             setProjects(response.data)
-        );
-    });
+        )
+            .catch((e) => console.log(e));
+    }, []);
 
     const loginToProject = (project: project) => {
         localStorage.setItem("currentProject", JSON.stringify(project));
-        window.location.assign("/project")
+        navigate("/project")
     }
 
     return (
@@ -63,16 +66,25 @@ const ProjectSelection: React.FC = () => {
                 </Collapse>
 
                 {projects.map((project, index) =>
-                    <div key={project.name} className={classes.divProjectSelectionPageLine}>
-                        <ButtonBase onClick={() => loginToProject(project)} style={{display: 'flex', color: '#282828'}}>
-                            <BookIcon style={{marginTop: 0, fontSize: 30}}/>
-                            <Typography variant="h6" style={{marginLeft: 16}}>
+                    <div key={project.name} style={{
+                        flexDirection: 'row',
+                        display: 'flex',
+                        marginTop: 10,
+                        cursor: "pointer"
+                    }}
+                         onClick={() => loginToProject(project)}>
+                        <BookIcon style={{marginTop: 0, fontSize: 30}}/>
+                        <div style={{marginLeft: "3%", width: "10%"}}>
+                            <Typography variant="h6">
                                 {project.name}
                             </Typography>
-                            <Typography variant="h6" style={{marginLeft: 200}}>
+                        </div>
+                        <div style={{width: "77%", marginLeft: "5%", textAlign: "left"}}>
+                            <Typography variant="h6">
                                 {project.description}
                             </Typography>
-                        </ButtonBase>
+                        </div>
+
                     </div>
                 )}
             </div>

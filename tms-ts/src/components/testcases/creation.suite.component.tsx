@@ -21,9 +21,20 @@ interface Props {
     selectedSuiteCome: { id: number, name: string } | null
     setTreeSuites: (treeSuites: treeSuite[]) => void
     setSuites: (suites: suite[]) => void
+    setSelectedSuiteForTreeView: (suite: treeSuite | undefined) => void,
+    selectedSuiteForTreeView: treeSuite | undefined
 }
 
-const CreationSuite: React.FC<Props> = ({show, setShow, suites, selectedSuiteCome, setTreeSuites, setSuites}) => {
+const CreationSuite: React.FC<Props> = ({
+                                            show,
+                                            setShow,
+                                            suites,
+                                            selectedSuiteCome,
+                                            setTreeSuites,
+                                            setSuites,
+                                            setSelectedSuiteForTreeView,
+                                            selectedSuiteForTreeView
+                                        }) => {
     const classes = useStyles()
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string } | null>(selectedSuiteCome)
     const [name, setName] = useState("")
@@ -46,17 +57,23 @@ const CreationSuite: React.FC<Props> = ({show, setShow, suites, selectedSuiteCom
     }
 
     const createSuite = () => {
-        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : 1}').id
-        if (namePresence) {
+        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : null}').id
+        if (namePresence && projectId) {
             const suite = {
                 name: name,
                 parent: selectedSuite ? selectedSuite.id : null,
                 project: projectId,
             }
             SuiteCaseService.createSuite(suite).then(() => {
-                SuiteCaseService.getTreeSuites().then((response) => {
-                    setTreeSuites(response.data)
-                })
+                if (selectedSuiteForTreeView === undefined) {
+                    SuiteCaseService.getTreeSuites().then((response) => {
+                        setTreeSuites(response.data)
+                    })
+                } else {
+                    SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
+                        setSelectedSuiteForTreeView(response.data)
+                    })
+                }
                 SuiteCaseService.getSuites().then((response) => {
                     setSuites(response.data)
                 })
@@ -66,7 +83,7 @@ const CreationSuite: React.FC<Props> = ({show, setShow, suites, selectedSuiteCom
             setNamePresence(false)
             setFillFieldName(false)
 
-        } else {
+        } else if (!namePresence) {
             document.getElementById("nameTextField")?.focus();
             setFillFieldName(true)
         }

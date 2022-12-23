@@ -1,17 +1,28 @@
-import React, {ChangeEvent, useEffect, useState} from "react";
-import AccountBoxIcon from '@mui/icons-material/AccountBox';
-import SettingsIcon from '@mui/icons-material/Settings';
-import {Button, Paper, Stack, Typography} from "@mui/material";
+import React, {ChangeEvent, SyntheticEvent, useEffect, useState} from "react";
+import {Box, Button, Paper, Tab, Typography} from "@mui/material";
 import {user} from "./models.interfaces";
 import ProjectService from "../services/project.service";
 import ProfileService from "../services/profile.service";
 import TextField from "@material-ui/core/TextField";
 import Settings from "./settings";
+import {TabContext, TabList, TabPanel} from "@mui/lab";
+import useStyles from "../styles/styles";
 
 const Profile: React.FC = () => {
+    const classes = useStyles()
     const [isLoaded, setIsLoaded] = useState<boolean>(false)
-    const [isSettings, setIsSettings] = useState<boolean>(false)
-    const [showPasswordChange, setShowPasswordChange] = useState(false)
+    const [view, setView] = useState("profile")
+    const handleOnChangeView = (event: SyntheticEvent, newValue: string) => {
+        setNewPassword("")
+        setRepeatNewPassword("")
+        setPassword("")
+        setMessage("")
+        setRepeatError(false)
+        setPasswordError(false)
+        setRepeatHelperText("Пожалуйста, введите новый пароль повторно")
+        setPasswordHelperText("")
+        setView(newValue)
+    }
 
     const [currentUser, setCurrentUser] = useState<user>()
     const [username, setUsername] = useState<string>("")
@@ -23,7 +34,9 @@ const Profile: React.FC = () => {
     const [repeatNewPassword, setRepeatNewPassword] = useState<string>("")
     const [password, setPassword] = useState<string>("")
     const [repeatError, setRepeatError] = useState(false)
+    const [passwordError, setPasswordError] = useState(false)
     const [repeatHelperText, setRepeatHelperText] = useState<string>("Пожалуйста, введите новый пароль повторно")
+    const [passwordHelperText, setPasswordHelperText] = useState<string>("")
     const [message, setMessage] = useState<string>("")
 
     const currentUsername = localStorage.getItem('currentUsername')
@@ -38,17 +51,6 @@ const Profile: React.FC = () => {
     const handleChangeRepeatNewPassword = (event: ChangeEvent<HTMLInputElement>) => setRepeatNewPassword(event.target.value)
     const handleChangePassword = (event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)
 
-    const handleOnShowSettings = () => setIsSettings(true)
-    const handleOnShowChangePassword = () => {
-        setMessage("")
-        setNewPassword("")
-        setRepeatNewPassword("")
-        setPassword("")
-        setShowPasswordChange(true)
-    }
-    const handleOnHideChangePassword = () => {
-        window.location.assign('/profile')
-    }
     const handleOnSavePersonalData = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (currentUser && currentPassword) {
@@ -71,9 +73,12 @@ const Profile: React.FC = () => {
         setRepeatHelperText("")
         setRepeatError(false)
         if (password !== currentPassword) {
-            setMessage("Пожалуйста, введите корректно текущий пароль")
+            setPasswordHelperText("Текущий пароль не совпадает с указанным")
+            setPasswordError(true)
             return;
         }
+        setPasswordHelperText("")
+        setPasswordError(false)
         if (currentUser && currentUsername) {
             setMessage("")
             ProfileService.changeUser(currentUser?.id, {
@@ -100,9 +105,6 @@ const Profile: React.FC = () => {
     }, [])
 
     if (isLoaded) {
-        if (isSettings) {
-            return <Settings/>
-        }
         return <>
             <Typography textAlign={"center"} mt={'15px'}>
                 {message}
@@ -115,69 +117,68 @@ const Profile: React.FC = () => {
                 width: '50%',
                 alignItems: 'center'
             }}>
-                {showPasswordChange ?
-                    <>
-                        <Button style={{alignSelf: "end"}} onClick={handleOnShowSettings}>
-                            <SettingsIcon/>
-                        </Button>
-                        <Stack direction={"row"}>
-                            <Button style={{margin: '10px 10px 10px 10px'}} onClick={handleOnHideChangePassword}>
-                                <AccountBoxIcon fontSize={'large'}/>
-                            </Button>
-                        </Stack>
-                        <form onSubmit={handleOnSavePassword}
-                              style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                            <TextField variant={"outlined"} required label={'Новый пароль'}
-                                       style={{margin: '10px 10px 10px 10px'}}
-                                       type={"password"}
-                                       value={newPassword}
-                                       onChange={handleChangeNewPassword}/>
-                            <TextField variant={"outlined"} required error={repeatError} label={'Подтверждение пароля'}
-                                       style={{margin: '10px 10px 10px 10px'}}
-                                       type={"password"} value={repeatNewPassword}
-                                       onChange={handleChangeRepeatNewPassword}
-                                       helperText={repeatHelperText}/>
-                            <TextField variant={"outlined"} required type={"password"} label={'Текущий пароль'}
-                                       style={{margin: '10px 10px 10px 10px'}}
-                                       value={password} onChange={handleChangePassword}/>
-
-                            <Button type={"submit"} variant={"contained"}
-                                    sx={{margin: '10px 10px 10px 10px'}}>Сохранить</Button>
-                        </form>
-                    </>
-                    :
-                    <>
-                        <Button style={{alignSelf: "end"}} onClick={handleOnShowSettings}>
-                            <SettingsIcon/>
-                        </Button>
-                        <Stack direction={"row"}>
-                            <AccountBoxIcon fontSize={'large'} sx={{margin: '10px 10px 10px 10px'}}/>
-                            <Button variant={"outlined"}
-                                    sx={{margin: '10px 10px 10px 10px'}} onClick={handleOnShowChangePassword}>Сменить
-                                пароль</Button>
-
-                        </Stack>
+                <TabContext value={view}>
+                    <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                        <TabList onChange={handleOnChangeView}>
+                            <Tab label="Личные данные" value={"profile"}/>
+                            <Tab label="Смена пароля" value={"changePassword"}/>
+                            <Tab label="Настройки" value={"settings"}/>
+                        </TabList>
+                    </Box>
+                    <TabPanel value={"profile"}>
                         <form onSubmit={handleOnSavePersonalData}
                               style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                            <TextField variant={"outlined"} required label={'Имя пользователя'}
+                            <TextField className={classes.centeredField} variant={"outlined"} required
+                                       label={'Имя пользователя'}
                                        style={{margin: '10px 10px 10px 10px'}}
                                        value={username} onChange={handleChangeUsername}/>
-                            <TextField variant={"outlined"} label={'Имя'} style={{margin: '10px 10px 10px 10px'}}
+                            <TextField className={classes.centeredField} variant={"outlined"} label={'Имя'}
+                                       style={{margin: '10px 10px 10px 10px'}}
                                        value={firstName}
                                        onChange={handleChangeFirstName}/>
-                            <TextField variant={"outlined"} label={'Фамилия'} style={{margin: '10px 10px 10px 10px'}}
+                            <TextField className={classes.centeredField} variant={"outlined"} label={'Фамилия'}
+                                       style={{margin: '10px 10px 10px 10px'}}
                                        value={lastName}
                                        onChange={handleChangeLastName}/>
-                            <TextField variant={"outlined"} label={'Адрес электронной почты'}
+                            <TextField className={classes.centeredField} variant={"outlined"}
+                                       label={'Адрес электронной почты'}
                                        style={{margin: '10px 10px 10px 10px'}}
                                        value={email} onChange={handleChangeEmail}/>
 
                             <Button type={"submit"} variant={"contained"}
                                     sx={{margin: '10px 10px 10px 10px'}}>Сохранить</Button>
                         </form>
-                    </>
-                }
+                    </TabPanel>
+                    <TabPanel value={"changePassword"}>
+                        <form onSubmit={handleOnSavePassword}
+                              style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                            <TextField className={classes.centeredField} variant={"outlined"} required
+                                       label={'Новый пароль'}
+                                       style={{margin: '10px 10px 10px 10px'}}
+                                       type={"password"}
+                                       value={newPassword}
+                                       onChange={handleChangeNewPassword}/>
+                            <TextField className={classes.centeredField} variant={"outlined"} required
+                                       error={repeatError} label={'Подтверждение пароля'}
+                                       style={{margin: '10px 10px 10px 10px'}}
+                                       type={"password"} value={repeatNewPassword}
+                                       onChange={handleChangeRepeatNewPassword}
+                                       helperText={repeatHelperText}/>
+                            <TextField className={classes.centeredField} variant={"outlined"} required
+                                       error={passwordError} type={"password"}
+                                       label={'Текущий пароль'}
+                                       style={{margin: '10px 10px 10px 10px'}}
+                                       value={password} onChange={handleChangePassword}
+                                       helperText={passwordHelperText}/>
 
+                            <Button type={"submit"} variant={"contained"}
+                                    sx={{margin: '10px 10px 10px 10px'}}>Сохранить</Button>
+                        </form>
+                    </TabPanel>
+                    <TabPanel value={"settings"}>
+                        <Settings/>
+                    </TabPanel>
+                </TabContext>
             </Paper></>
     } else
         return <></>

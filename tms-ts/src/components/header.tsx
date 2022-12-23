@@ -13,10 +13,12 @@ import MenuItem from '@mui/material/MenuItem';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import {NotificationsActive} from "@mui/icons-material";
 import AuthService from "../services/Authorization/auth.service";
+import {useNavigate} from "react-router-dom";
 
 const buttons = [['Тест-кейсы', "/testcases"], ['Тест-планы', "/testplans"]];
 
 const Header: React.FC = () => {
+    const navigate = useNavigate()
 
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
@@ -33,15 +35,25 @@ const Header: React.FC = () => {
         setAnchorElNav(null);
     };
 
+    const handleCloseNavMenuAndNavigate = (href: string) => {
+        setAnchorElNav(null);
+        navigate(href);
+    };
+
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
+    };
+
+    const handleCloseUserMenuAndNavigate = (href: string) => {
+        setAnchorElUser(null);
+        navigate(href);
     };
 
     const handleLogout = () => {
         AuthService.logout()
     };
 
-    const isProjectOpen = window.location.pathname !== '/';
+    const isProjectOpen = window.location.pathname !== '/' && window.location.pathname !== '/login';
 
     const buttonsAtNavBar = () => {
         if (isProjectOpen) {
@@ -96,10 +108,10 @@ const Header: React.FC = () => {
                     {/*        textDecoration: 'none',*/}
                     {/*    }}*/}
                     {/*>*/}
-                    {/*    Название проекта*/}
+                    {/*    {localStorage.getItem("currentProject")}*/}
                     {/*</Typography>*/}
                     <Box sx={{flexGrow: 1, display: {xs: 'flex', md: 'none'}}}>
-                        <IconButton
+                        {isProjectOpen && <IconButton
                             size="large"
                             aria-label="account of current user"
                             aria-controls="menu-appbar"
@@ -108,8 +120,8 @@ const Header: React.FC = () => {
                             color="inherit"
                         >
                             <MenuIcon/>
-                        </IconButton>
-                        <Menu
+                        </IconButton>}
+                        {isProjectOpen && <Menu
                             id="menu-appbar"
                             anchorEl={anchorElNav}
                             anchorOrigin={{
@@ -120,17 +132,17 @@ const Header: React.FC = () => {
                                 vertical: 'top',
                                 horizontal: 'left',
                             }}
-                            open={Boolean(anchorElNav)}
+                            open={anchorElNav != null}
                             onClose={handleCloseNavMenu}
                             sx={{
                                 display: {xs: 'block', md: 'none'},
                             }}
                         >
-                            <MenuItem onClick={handleCloseNavMenu}>
+                            <MenuItem onClick={() => handleCloseNavMenuAndNavigate("/testcases")}>
                                 <Typography
                                     textAlign="center"
-                                    component="a"
-                                    href="/testcases"
+                                    // component="a"
+                                    // href="/testcases"
                                     sx={{
                                         color: 'inherit',
                                         textDecoration: 'none',
@@ -139,11 +151,13 @@ const Header: React.FC = () => {
                                     Тест-кейсы
                                 </Typography>
                             </MenuItem>
-                            <MenuItem onClick={handleCloseNavMenu}>
+                            <MenuItem onClick={() => handleCloseNavMenuAndNavigate("/testplans")}>
                                 <Typography
                                     textAlign="center"
                                     component="a"
                                     href="/testplans"
+                                    // component="a"
+                                    // href="/test-plans"
                                     sx={{
                                         color: 'inherit',
                                         textDecoration: 'none',
@@ -151,7 +165,7 @@ const Header: React.FC = () => {
                                     Тест-планы
                                 </Typography>
                             </MenuItem>
-                        </Menu>
+                        </Menu>}
                     </Box>
                     <Typography
                         variant="h5"
@@ -199,25 +213,25 @@ const Header: React.FC = () => {
                                 vertical: 'top',
                                 horizontal: 'right',
                             }}
-                            open={Boolean(anchorElUser)}
+                            open={anchorElUser != null}
                             onClose={handleCloseUserMenu}
                         >
-                            <MenuItem key={"Профиль"} onClick={handleCloseUserMenu}>
+                            <MenuItem key={"Профиль"} onClick={() =>
+                                handleCloseUserMenuAndNavigate("/profile")
+                            }>
                                 <Typography
                                     textAlign="center"
-                                    component="a"
-                                    href={"/profile"}
                                     sx={{
                                         color: 'inherit',
                                         textDecoration: 'none',
                                     }}
                                 > Профиль </Typography>
                             </MenuItem>
-                            <MenuItem key={"Настройки"} onClick={handleCloseUserMenu}>
+                            <MenuItem key={"Настройки"} onClick={() =>
+                                handleCloseUserMenuAndNavigate("/settings")
+                            }>
                                 <Typography
                                     textAlign="center"
-                                    component="a"
-                                    href={"/settings"}
                                     sx={{
                                         color: 'inherit',
                                         textDecoration: 'none',

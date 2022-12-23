@@ -34,7 +34,9 @@ export default class AuthService {
         axios.get(API_URL + "logout/", {headers: authHeader(), params: {"token": localStorage.getItem('token')}})
             .then(() => {
             })
+        localStorage.removeItem("currentUsername")
         localStorage.removeItem("accessToken")
+        localStorage.removeItem("refreshToken")
     }
 
     static getCurrentAccessToken() {
