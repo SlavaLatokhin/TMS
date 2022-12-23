@@ -1,19 +1,25 @@
 import {Button, Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/material";
-import React, {useState} from "react";
+import React from "react";
 import SuiteCaseService from "../../services/suite.case.service";
 import {treeSuite} from "./suites.component";
+import {myCase} from "./suites.component";
 
 function DeletionDialogElements(props: {
     openDialogDeletion: boolean, setOpenDialogDeletion: (show: boolean) => void,
     selectedForDeletion: number[], setSelectedForDeletion: (idCases: number[]) => void
     setTreeSuites: (treeSuites: treeSuite[]) => void,
+    selectedSuiteForTreeView: treeSuite,
+    setSelectedSuiteForTreeView: (treeSuite: treeSuite) => void,
+    setDetailedCaseInfo: (myCase: { show: boolean, myCase: myCase }) => void,
+    detailedCaseInfo: { show: boolean, myCase: myCase }
 }) {
     const {
         openDialogDeletion,
         setOpenDialogDeletion,
         selectedForDeletion,
-        setTreeSuites,
-        setSelectedForDeletion
+        setSelectedForDeletion,
+        setSelectedSuiteForTreeView, selectedSuiteForTreeView,
+        setDetailedCaseInfo, detailedCaseInfo
     } = props
 
 
@@ -23,12 +29,27 @@ function DeletionDialogElements(props: {
 
     async function agreeToDelete() {
         SuiteCaseService.deleteCases(selectedForDeletion).then(() => {
-            SuiteCaseService.getTreeSuites().then((response) => {
-                setTreeSuites(response.data)
+            if (detailedCaseInfo.show && selectedForDeletion.indexOf(detailedCaseInfo.myCase.id) !== -1) {
+                setDetailedCaseInfo({
+                    show: false, myCase: {
+                        id: -1,
+                        name: "",
+                        suite: -1,
+                        scenario: "",
+                        project: -1,
+                        setup: "",
+                        teardown: "",
+                        estimate: -1
+                    }
+                })
+            }
+            SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
+                setSelectedSuiteForTreeView(response.data)
+                setSelectedForDeletion([])
+            }).catch((e) => {
+                console.log(e)
             })
         })
-
-        setSelectedForDeletion([])
         setOpenDialogDeletion(false)
     }
 

@@ -21,7 +21,9 @@ interface Props {
     setInfoCaseForEdit: (myCase: null) => void
     setDetailedCaseInfo: (myCase: { show: boolean, myCase: myCase }) => void,
     detailedCaseInfo: { show: boolean, myCase: myCase },
-    setLastEditCase: (id: number) => void
+    setLastEditCase: (id: number) => void,
+    setSelectedSuiteForTreeView : (suite: treeSuite) => void,
+    selectedSuiteForTreeView: treeSuite
 }
 
 const CreationCase: React.FC<Props> = ({
@@ -29,24 +31,15 @@ const CreationCase: React.FC<Props> = ({
                                            setShow,
                                            suites,
                                            selectedSuiteCome,
-                                           setTreeSuites,
                                            infoCaseForEdit,
                                            setInfoCaseForEdit,
                                            setDetailedCaseInfo,
                                            detailedCaseInfo,
-                                           setLastEditCase
+                                           setLastEditCase,
+                                           setSelectedSuiteForTreeView,
+                                           selectedSuiteForTreeView
                                        }) => {
     const classes = useStyles()
-
-    const [tagInput, setTagInput] = useState("")
-    const [tag, setTag] = useState("")
-    const [tagPresence, setTagPresence] = useState(false)
-    const [tags, setTags] = useState<string []>([])
-
-    const [link, setLink] = useState("")
-    const [links, setLinks] = useState<string []>([])
-    const [linkPresence, setLinkPresence] = useState(false)
-
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string }>({
         id: suites[0].id,
         name: suites[0].name,
@@ -57,7 +50,6 @@ const CreationCase: React.FC<Props> = ({
 
     const [estimate, setEstimate] = useState("")
     const [estimateNumber, setEstimateNumber] = useState<number | null>(null)
-    const [estimatePresence, setEstimatePresence] = useState(false)
 
     const [scenario, setScenario] = useState("")
     const [scenarioPresence, setScenarioPresence] = useState(false)
@@ -87,13 +79,6 @@ const CreationCase: React.FC<Props> = ({
     }, [selectedSuiteCome])
 
     const handleClose = () => {
-        setTag("")
-        setTagInput("")
-        setTags([])
-        setTagPresence(false)
-        setLink("")
-        setLinkPresence(false)
-        setLinks([])
         setShow(false)
         setName("")
         setNamePresence(false)
@@ -108,77 +93,14 @@ const CreationCase: React.FC<Props> = ({
         setInfoCaseForEdit(null)
     }
 
-    const handleDelete = (index: number) => {
-        let oldTags = tags.slice()
-        oldTags.splice(index, 1)
-        setTags(oldTags)
-    }
-
-    const handleDeleteLink = (index: number) => {
-        let oldLinks = links.slice()
-        oldLinks.splice(index, 1)
-        setLinks(oldLinks)
-    }
-
-    const createTag = () => {
-        setTags((prevState) => (prevState.concat([tag])))
-        setTagPresence(false)
-        setTagInput("")
-    }
-
-    const createLink = () => {
-        setLinks((prevState) => (prevState.concat([link])))
-        setLinkPresence(false)
-        setLink("")
-    }
-
-    const keyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === "Enter" && tagPresence) {
-            createTag()
-        }
-    }
-
-    const keyPressLink = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === "Enter" && linkPresence) {
-            createLink()
-        }
-    }
-
-    const onChangeTagContent = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        const strInput = e.target.value.trimStart().replace(/ {2,}/g, ' ')
-        const tag = strInput.trimEnd()
-        if (tag.length > 0) {
-            setTag(tag)
-            setTagInput(strInput)
-            setTagPresence(true)
-        } else {
-            setTagInput(strInput)
-            setTagPresence(false)
-        }
-    }
-
-    const onChangeLinkContent = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        const strInput = e.target.value.trim()
-        if (strInput.length > 0) {
-            setLink(strInput)
-            setLinkPresence(true)
-        } else {
-            setLink(strInput)
-            setLinkPresence(false)
-        }
-    }
-
     const onChangeEstimateContent = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const strInput = e.target.value
-
         if (strInput.length > 0) {
             setEstimate(strInput)
             setEstimateNumber(parseInt(strInput, 10))
-            setEstimatePresence(true)
         } else if (strInput.length == 0) {
             setEstimate("")
             setEstimateNumber(null)
-            setEstimatePresence(false)
         }
     }
 
@@ -224,8 +146,8 @@ const CreationCase: React.FC<Props> = ({
         }
     }
     const createCase = () => {
-        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : 1}').id
-        if (namePresence && scenarioPresence) {
+        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : null}').id
+        if (namePresence && scenarioPresence && projectId) {
             const myCase = {
                 name: name,
                 project: projectId,
@@ -237,9 +159,9 @@ const CreationCase: React.FC<Props> = ({
             }
             if (infoCaseForEdit) {
                 SuiteCaseService.editCase({...myCase, url: infoCaseForEdit.url, id: infoCaseForEdit.id}).then(() => {
-                    SuiteCaseService.getTreeSuites().then((response) => {
-                        setTreeSuites(response.data)
-                    })
+                   SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response)=>{
+                       setSelectedSuiteForTreeView(response.data)
+                   })
                 })
                 if (infoCaseForEdit.id === detailedCaseInfo.myCase.id && detailedCaseInfo.show) {
                     setLastEditCase(infoCaseForEdit.id)
@@ -247,8 +169,8 @@ const CreationCase: React.FC<Props> = ({
                 }
             } else {
                 SuiteCaseService.createCase(myCase).then(() => {
-                    SuiteCaseService.getTreeSuites().then((response) => {
-                        setTreeSuites(response.data)
+                    SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response)=>{
+                        setSelectedSuiteForTreeView(response.data)
                     })
                 })
             }
@@ -260,7 +182,7 @@ const CreationCase: React.FC<Props> = ({
         } else if (!namePresence) {
             document.getElementById("nameCaseTextField")?.focus();
             setFillFieldName(true)
-        } else {
+        } else if (!scenarioPresence) {
             document.getElementById("scenarioCaseTextField")?.focus();
             setFillFieldScenario(true)
         }
@@ -291,7 +213,7 @@ const CreationCase: React.FC<Props> = ({
                             title={<Grid style={{display: "flex", flexDirection: 'row'}}><WarningAmberIcon
                                 sx={{fontSize: 25, marginRight: 1}}/> <Typography> Заполните это
                                 поле.</Typography></Grid>} placement="top-start" arrow
-                            open={fillFieldScenario}>
+                            open={fillFieldName}>
                             <TextField
                                 id="nameCaseTextField"
                                 className={classes.textFieldSelectCreationCaseSuite}
@@ -357,7 +279,6 @@ const CreationCase: React.FC<Props> = ({
                         <Typography variant="h6">
                             Очистка после теста
                         </Typography>
-
                         <TextField
                             id="scenarioCaseTextField"
                             className={classes.textFieldSelectCreationCaseSuite}
@@ -373,41 +294,6 @@ const CreationCase: React.FC<Props> = ({
                             maxRows={3}
                         />
                     </Grid>
-                    {/*<Grid className={classes.gridContent}>*/}
-                    {/*    <Typography variant="h6">*/}
-                    {/*        Тэги*/}
-                    {/*    </Typography>*/}
-                    {/*    <TextField*/}
-                    {/*        value={tagInput}*/}
-                    {/*        onChange={(content) => onChangeTagContent(content)}*/}
-                    {/*        className={classes.textFieldSelectCreationCaseSuite}*/}
-                    {/*        variant="outlined"*/}
-                    {/*        margin="normal"*/}
-                    {/*        autoComplete="off"*/}
-                    {/*        fullWidth*/}
-                    {/*        label="Введите тэг"*/}
-                    {/*        onKeyPress={(key) => keyPress(key)}*/}
-                    {/*        InputProps={{*/}
-                    {/*            endAdornment: (*/}
-                    {/*                <InputAdornment position="end">*/}
-                    {/*                    <IconButton size={"small"} onClick={() => {*/}
-                    {/*                        if (tagPresence) {*/}
-                    {/*                            createTag()*/}
-                    {/*                        }*/}
-                    {/*                    }}>*/}
-                    {/*                        <AddCircleIcon fontSize={"large"}/>*/}
-                    {/*                    </IconButton>*/}
-                    {/*                </InputAdornment>*/}
-                    {/*            ),*/}
-                    {/*        }}*/}
-                    {/*    />*/}
-                    {/*    <Grid className={classes.stackTags}>*/}
-                    {/*        {tags.map((tag, index) =>*/}
-                    {/*            <Chip key={index} label={tag} style={{margin: 3, maxWidth: "95%"}}*/}
-                    {/*                  onDelete={() => handleDelete(index)}/>*/}
-                    {/*        )}*/}
-                    {/*    </Grid>*/}
-                    {/*</Grid>*/}
                 </Grid>
                 <Grid xs={3} item style={{
                     backgroundColor: "#eeeeee", paddingTop: 26, display: "flex",
@@ -455,55 +341,6 @@ const CreationCase: React.FC<Props> = ({
                                 label="Введите время"
                             />
                         </Grid>
-                        {/*<Grid>*/}
-                        {/*    <Typography>*/}
-                        {/*        Ссылки*/}
-                        {/*    </Typography>*/}
-                        {/*    <TextField*/}
-                        {/*        value={link}*/}
-                        {/*        onChange={(content) => onChangeLinkContent(content)}*/}
-                        {/*        style={{marginTop: 10}}*/}
-                        {/*        className={classes.textFieldSelectCreationCaseSuite}*/}
-                        {/*        variant="outlined"*/}
-                        {/*        margin="normal"*/}
-                        {/*        autoComplete="off"*/}
-                        {/*        fullWidth*/}
-                        {/*        label="Введите URL"*/}
-                        {/*        onKeyPress={(key) => keyPressLink(key)}*/}
-                        {/*        InputProps={{*/}
-                        {/*            endAdornment: (*/}
-                        {/*                <InputAdornment position="end">*/}
-                        {/*                    <IconButton size={"small"} onClick={() => {*/}
-                        {/*                        if (linkPresence) {*/}
-                        {/*                            createLink()*/}
-                        {/*                        }*/}
-                        {/*                    }}>*/}
-                        {/*                        <AddCircleIcon fontSize={"medium"}/>*/}
-                        {/*                    </IconButton>*/}
-                        {/*                </InputAdornment>*/}
-                        {/*            ),*/}
-                        {/*        }}*/}
-                        {/*    />*/}
-                        {/*    <Grid className={classes.stackTags}>*/}
-                        {/*        {links.map((link, index) =>*/}
-                        {/*            <Grid>*/}
-                        {/*                <Chip key={index} label={link} style={{*/}
-                        {/*                    margin: 3,*/}
-                        {/*                    maxWidth: "95%",*/}
-                        {/*                    color: "#0000FF",*/}
-                        {/*                    textDecoration: "underline"*/}
-                        {/*                }}*/}
-                        {/*                      onDelete={() => handleDeleteLink(index)}*/}
-                        {/*                      onClick={() => {*/}
-                        {/*                          const url = link.match(/^http[s]?:\/\//) ? link : '//' + link;*/}
-                        {/*                          window.open(url, '_blank')*/}
-                        {/*                      }}*/}
-                        {/*                />*/}
-                        {/*                <br/>*/}
-                        {/*            </Grid>*/}
-                        {/*        )}*/}
-                        {/*    </Grid>*/}
-                        {/*</Grid>*/}
                     </Grid>
                     <Grid style={{textAlign: "center"}}>
                         <Grid>
