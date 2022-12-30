@@ -1,4 +1,4 @@
-import {IconButton, Input} from "@mui/material";
+import {IconButton, TextField} from "@mui/material";
 import Typography from '@mui/material/Typography';
 import React, {useEffect, useState} from "react";
 import {suite, treeSuite} from "./suites.component";
@@ -167,11 +167,20 @@ const FolderSuites = (props: {
 
     useEffect(() => {
         const suitesIdArray: string[] = []
-        suites.map((suite) => (
-            suitesIdArray.push(suite.id.toString())
-        ))
+        if (treeSuites){
+            const fillExpandedSuite = (childrenSuitesArr: treeSuite[]) => {
+                childrenSuitesArr.map((suite) => {
+                    if (suite.children.length > 0) {
+                        fillExpandedSuite(suite.children)
+                    }
+                    suitesIdArray.push(suite.id.toString())
+                })
+            }
+            suitesIdArray.push(treeSuites.id.toString())
+            fillExpandedSuite(treeSuites.children)
+        }
         setExpanded(suitesIdArray)
-    }, [suites]);
+    }, [treeSuites]);
 
     const onChangeName = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (e.target.value) {
@@ -294,11 +303,12 @@ const FolderSuites = (props: {
                     margin: "15px 0px 0px 20px",
                 }}>
                     <div>
-                        <Input
+                        <TextField
                             onChange={(content) => onChangeName(content)}
                             autoComplete="off"
                             style={{width: "95%"}}
                             placeholder="Поиск..."
+                            variant={"outlined"}
                         />
                     </div>
 

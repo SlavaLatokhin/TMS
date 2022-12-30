@@ -22,7 +22,9 @@ interface Props {
     setTreeSuites: (treeSuites: treeSuite[]) => void
     setSuites: (suites: suite[]) => void
     setSelectedSuiteForTreeView: (suite: treeSuite | undefined) => void,
-    selectedSuiteForTreeView: treeSuite | undefined
+    selectedSuiteForTreeView: treeSuite | undefined,
+    infoSuiteForEdit: { id: number, name: string } | null;
+    setInfoSuiteForEdit: (suite: { id: number, name: string } | null) => void
 }
 
 const CreationSuite: React.FC<Props> = ({
@@ -33,7 +35,9 @@ const CreationSuite: React.FC<Props> = ({
                                             setTreeSuites,
                                             setSuites,
                                             setSelectedSuiteForTreeView,
-                                            selectedSuiteForTreeView
+                                            selectedSuiteForTreeView,
+                                            infoSuiteForEdit,
+                                            setInfoSuiteForEdit
                                         }) => {
     const classes = useStyles()
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string } | null>(selectedSuiteCome)
@@ -46,11 +50,16 @@ const CreationSuite: React.FC<Props> = ({
         setName("")
         setNamePresence(false)
         setFillFieldName(false)
+        setInfoSuiteForEdit(null)
     }
 
     useEffect(() => {
         setSelectedSuite(selectedSuiteCome)
-    }, [selectedSuiteCome])
+        if (infoSuiteForEdit) {
+            setName(infoSuiteForEdit.name)
+            setNamePresence(true)
+        }
+    }, [selectedSuiteCome, infoSuiteForEdit])
 
     const chooseSuite = (e: any) => {
         setSelectedSuite(e.target.value ? {id: e.target.value.id, name: e.target.value.name} : null)
@@ -64,20 +73,35 @@ const CreationSuite: React.FC<Props> = ({
                 parent: selectedSuite ? selectedSuite.id : null,
                 project: projectId,
             }
-            SuiteCaseService.createSuite(suite).then(() => {
-                if (selectedSuiteForTreeView === undefined) {
-                    SuiteCaseService.getTreeSuites().then((response) => {
-                        setTreeSuites(response.data)
-                    })
-                } else {
-                    SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
-                        setSelectedSuiteForTreeView(response.data)
-                    })
-                }
-                SuiteCaseService.getSuites().then((response) => {
-                    setSuites(response.data)
+            console.log(infoSuiteForEdit)
+            if (infoSuiteForEdit) {
+                SuiteCaseService.editSuite({id: infoSuiteForEdit.id, ...suite}).then(() => {
+                    if (selectedSuiteForTreeView === undefined) {
+                        SuiteCaseService.getTreeSuites().then((response) => {
+                            setTreeSuites(response.data)
+                        })
+                    } else {
+                        SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
+                            setSelectedSuiteForTreeView(response.data)
+                        })
+                    }
                 })
-            })
+            } else {
+                SuiteCaseService.createSuite(suite).then(() => {
+                    if (selectedSuiteForTreeView === undefined) {
+                        SuiteCaseService.getTreeSuites().then((response) => {
+                            setTreeSuites(response.data)
+                        })
+                    } else {
+                        SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
+                            setSelectedSuiteForTreeView(response.data)
+                        })
+                    }
+                    SuiteCaseService.getSuites().then((response) => {
+                        setSuites(response.data)
+                    })
+                })
+            }
             setShow(false)
             setName("")
             setNamePresence(false)
@@ -100,6 +124,16 @@ const CreationSuite: React.FC<Props> = ({
             setNamePresence(false)
         }
     }
+
+    const MenuProps = {
+        PaperProps: {
+            style: {
+                maxHeight: "30%",
+                maxWidth: "30%",
+                overflow: "auto"
+            },
+        },
+    };
 
     return (
         <Dialog
@@ -162,6 +196,7 @@ const CreationSuite: React.FC<Props> = ({
                                     label="Выберите сьюту"
                                     onChange={(e) => chooseSuite(e)}
                                     renderValue={(selected) => <Grid>{selected}</Grid>}
+                                    MenuProps={MenuProps}
                                 >
                                     <MenuItem value={null as any}>
                                         <em>Не выбрано</em>

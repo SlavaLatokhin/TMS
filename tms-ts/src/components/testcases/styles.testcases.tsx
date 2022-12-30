@@ -1,4 +1,4 @@
-import {makeStyles} from "@material-ui/core/styles";
+import {makeStyles} from "@mui/styles";
 
 
 export default makeStyles({
@@ -79,7 +79,7 @@ export default makeStyles({
         flexDirection: "row",
         marginTop: 1,
         marginBottom: 0.32,
-        maxWidth: 500
+        maxWidth: "100%",
     },
     iconButtonDeleteSuite: {
         marginLeft: 20,
@@ -151,19 +151,33 @@ export default makeStyles({
         cursor: "pointer",
         display: "flex",
         flexDirection: "row",
+        wordBreak: "break-all"
     },
     suitePaper: {
         borderRadius: 20,
         backgroundColor: "#eeeeee",
         padding: 7,
-        cursor: "pointer",
         margin: 10,
         width: "50%",
+        wordBreak: "break-all"
     },
     cellSuiteChip:{
         padding: "8px 0px 1px 20px"
     },
     addCaseSuiteCell: {
         marginLeft: 10
+    },
+    numOfSuitesCases: {
+        margin: 5
+    },
+    linkSuite: {
+        textDecoration: "none",
+        color: "black",
+        fontSize: 18,
+        marginLeft: 5,
+        fontWeight: 500,
+        "&:hover": {
+            textDecoration: "underline",
+        },
     }
 })

@@ -40,9 +40,12 @@ const CreationCase: React.FC<Props> = ({
                                            selectedSuiteForTreeView
                                        }) => {
     const classes = useStyles()
-    const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string }>({
+    const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string }>(suites.length > 0 ? {
         id: suites[0].id,
         name: suites[0].name,
+    } : {
+        id: -1,
+        name: "Нет допустимых сьют",
     })
 
     const [name, setName] = useState("")
@@ -192,6 +195,16 @@ const CreationCase: React.FC<Props> = ({
         setSelectedSuite({id: e.target.value.id, name: e.target.value.name})
     }
 
+    const MenuProps = {
+        PaperProps: {
+            style: {
+                maxHeight: "30%",
+                maxWidth: "30%",
+                overflow: "auto"
+            },
+        },
+    };
+
     return (
         <Dialog
             disableEnforceFocus
@@ -315,6 +328,7 @@ const CreationCase: React.FC<Props> = ({
                                     label="Выберите сьюту"
                                     onChange={(e) => chooseSuite(e)}
                                     renderValue={(selected) => <Grid>{selected}</Grid>}
+                                    MenuProps={MenuProps}
                                 >
                                     {suites.map((suite, index) => <MenuItem key={index}
                                                                             value={suite as any}>{suite.name}</MenuItem>)}
