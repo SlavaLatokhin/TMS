@@ -1,5 +1,6 @@
 import React, {ChangeEvent, useEffect, useState} from 'react';
 import {
+    Button,
     Checkbox, Chip,
     FormControlLabel,
     FormGroup,
@@ -14,10 +15,9 @@ import {
     TableHead,
     TableRow,
     TextField,
+    Typography,
     Zoom
 } from "@mui/material";
-import Typography from "@mui/material/Typography";
-import {Button} from "@material-ui/core";
 import LineChartComponent from "./charts/line.chart.component";
 import PieChartComponent from "./charts/pie.chart.component";
 import {DesktopDatePicker, LocalizationProvider} from "@mui/x-date-pickers";
@@ -43,7 +43,7 @@ const Project: React.FC = () => {
     const handleOnSwitch = (event: ChangeEvent<HTMLInputElement>) => setSwitch(event.target.checked);
     const [showFilter, setShowFilter] = React.useState(false);
     const handleOnOpenFilter = () => setShowFilter(!showFilter);
-    const [startDate, setStartDate] = React.useState<Moment | null>(moment("01.01.1970"));
+    const [startDate, setStartDate] = React.useState<Moment | null>(moment("01.01.1970", "DD.MM.YYYY"));
     const [endDate, setEndDate] = React.useState<Moment | null>(moment());
     const handleChangeStartDate = (newValue: Moment | null) => setStartDate(newValue);
     const handleChangeEndDate = (newValue: Moment | null) => setEndDate(newValue);
@@ -62,7 +62,7 @@ const Project: React.FC = () => {
     const currentUsername = localStorage.getItem('currentUsername')
 
     let dataForLineChart: test[] = []
-    const projectTableData = testPlans.map((value, indexOfTestPlan) => {
+    const projectTableData = testPlans.map((value) => {
         let date = value.started_at
         const results: { [key: string]: number; } = {
             "all": value.tests.length,
@@ -166,21 +166,21 @@ const Project: React.FC = () => {
 
     const tableDataToShow = <TableBody>
         {(isSwitched ? personalTableData : projectTableData)?.map(
-            (testplanData) =>
+            (testplanData, planIndex) =>
                 (!moment(testplanData[testplanData.length - 2], "YYYY-MM-DDThh:mm").isBetween(startDate, endDate, undefined, "[]")) ? null :
                     (
-                        <TableRow style={{cursor: "pointer"}} hover={true}
+                        <TableRow key={planIndex} style={{cursor: "pointer"}} hover={true}
                                   onClick={() => window.location.assign("/testplans/" + testplanData[0])}>
                             {testplanData.slice(0, testplanData.length - 2).concat([moment(testplanData[testplanData.length - 2], "YYYY-MM-DDThh:mm")
                                 .format("DD.MM.YYYY"), testplanData[testplanData.length - 1]]).map(
                                 (value, index) => {
                                     if (index < minStatusIndex || index > maxStatusIndex) {
-                                        return <TableCell>
+                                        return <TableCell key={planIndex + "." + index}>
                                             <Typography align={'center'}>{value}</Typography>
                                         </TableCell>
                                     }
                                     if (statusesShow[statuses[index - minStatusIndex].name.toLowerCase()]) {
-                                        return <TableCell>
+                                        return <TableCell key={planIndex + "." + index}>
                                             <Typography align={'center'}>{value}</Typography>
                                         </TableCell>
                                     }
@@ -232,10 +232,10 @@ const Project: React.FC = () => {
                                 }
                             </Stack>
                             <Button variant="contained"
-                                    style={{marginLeft: '10px'}}
+                                    style={{marginLeft: '10px', backgroundColor: "#696969"}}
                                     onClick={handleOnOpenFilter}>Фильтр</Button>
                             <Button variant="contained"
-                                    style={{marginLeft: '10px'}}
+                                    style={{marginLeft: '10px', backgroundColor: "#696969"}}
                                     onClick={handleShowProjectSettings}
                             >Настройки</Button>
                         </Stack>

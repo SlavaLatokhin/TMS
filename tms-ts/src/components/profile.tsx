@@ -1,9 +1,8 @@
 import React, {ChangeEvent, SyntheticEvent, useEffect, useState} from "react";
-import {Box, Button, Paper, Tab, Typography} from "@mui/material";
+import {Box, Button, Paper, Tab, TextField, Typography} from "@mui/material";
 import {user} from "./models.interfaces";
 import ProjectService from "../services/project.service";
 import ProfileService from "../services/profile.service";
-import TextField from "@material-ui/core/TextField";
 import Settings from "./settings";
 import {TabContext, TabList, TabPanel} from "@mui/lab";
 import useStyles from "../styles/styles";
@@ -118,7 +117,7 @@ const Profile: React.FC = () => {
                 alignItems: 'center'
             }}>
                 <TabContext value={view}>
-                    <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                    <Box sx={{display: 'flex', borderBottom: 1, borderColor: 'divider'}}>
                         <TabList onChange={handleOnChangeView}>
                             <Tab label="Личные данные" value={"profile"}/>
                             <Tab label="Смена пароля" value={"changePassword"}/>

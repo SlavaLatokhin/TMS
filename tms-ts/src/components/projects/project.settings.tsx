@@ -186,22 +186,22 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
     }
 
     const parser = new XMLParser();
-    const [uploadedFile, setUploadedFile] = useState<File>()
-    const handleUploadFile = (event: ChangeEvent<HTMLInputElement>) => {
-        if (!event.target.files) return;
-        setUploadedFile(event.target.files[0]);
-    }
+    const getDescription = (custom: any) => `Preconditions: ${custom['preconds']} \n
+    Steps: ${custom['steps']} \n
+    Expected: ${custom['expected']}`
+
     const loadCases = (cases: any, suiteId: number) => {
         let allCases = [cases["case"]]
         if (Symbol.iterator in Object(cases["case"])) {
             allCases = cases["case"]
         }
         Array.prototype.forEach.call(allCases, (testCase: { [key: string]: string; }) => {
+            const description = getDescription(testCase["custom"])
             const newCase = {
                 name: testCase["title"],
                 suite: suiteId,
                 project: projectValue.id,
-                scenario: "something"
+                scenario: description !== "" ? description : "Nothing"
             }
             SuiteCaseService.createCase(newCase).catch(e => console.log(e))
         })
@@ -232,7 +232,10 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
             }).catch(e => console.log(e))
         })
     }
-    const handleLoadTestCases = (event: FormEvent<HTMLFormElement>) => {
+    const handleLoadTestCases = (event: ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.files) return;
+        const uploadedFile = event.target.files[0];
+
         event.preventDefault()
         const reader = new FileReader()
         if (!uploadedFile) return;
@@ -378,15 +381,19 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 Импорт тест-кейсов (.xml)
                             </Typography>
                         </div>
-                        <form style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                            alignItems: "center"
-                        }} onSubmit={handleLoadTestCases}>
-                            <input style={{marginTop: "20px"}} type={"file"} onChange={handleUploadFile}/>
-                            <Button style={{marginTop: "20px"}} variant={"contained"} type={"submit"}>Загрузить</Button>
-                        </form>
+                        <Button
+                            variant="contained"
+                            style={{
+                                    alignSelf: "center"}}
+                            component="label"
+                        >
+                            Импортировать
+                            <input
+                                type="file"
+                                onChange={handleLoadTestCases}
+                                hidden
+                            />
+                        </Button>
                     </div>
                     {/*<Grid container spacing={2} className={classes.gridContent}>*/}
                     {/*    <Grid item xs={2}>*/}
