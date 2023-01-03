@@ -34,9 +34,9 @@ const Project: React.FC = () => {
     const classes = useStyles();
     const navigate = useNavigate();
     const labels = [['ID', '#000000'], ['НАЗВАНИЕ ТЕСТ-ПЛАНА', '#000000'], ['ВСЕГО ТЕСТОВ', '#000000']];
+    const minStatusIndex = labels.length;
     statuses.map((status) => labels.push([status.name.toUpperCase(), status.color]))
     labels.push(['ДАТА ИЗМЕНЕНИЯ', '#000000'], ['КЕМ ИЗМЕНЕНО', '#000000'])
-    const minStatusIndex = 3;
     const maxStatusIndex = minStatusIndex + statuses.length - 1;
 
     const [isSwitched, setSwitch] = React.useState(false);
@@ -57,28 +57,27 @@ const Project: React.FC = () => {
     const [tests, setTests] = useState<test[]>([])
     const [testPlans, setTestPlans] = useState<testPlan[]>([])
     const [users, setUsers] = useState<user[]>([])
-    const testPlanDates: string[] = []
-    const editorIds: (number | null)[] = ((new Array<number | null>(testPlans.length)).fill(null))
 
     const projectValue = JSON.parse(localStorage.getItem("currentProject") ?? '')
     const currentUsername = localStorage.getItem('currentUsername')
 
     let dataForLineChart: test[] = []
     const projectTableData = testPlans.map((value, indexOfTestPlan) => {
-        testPlanDates.push(value.started_at)
+        let date = value.started_at
         const results: { [key: string]: number; } = {
             "all": value.tests.length,
         }
+        let editorId: number | null = null;
         statuses.map((status) => results[status.name.toLowerCase()] = 0)
         value.tests.sort((a, b) =>
             moment(b.updated_at, "YYYY-MM-DDThh:mm").valueOf() - moment(a.updated_at, "YYYY-MM-DDThh:mm").valueOf())
-        testPlanDates[testPlanDates.length - 1] = value.tests[0]?.updated_at ?? testPlanDates[testPlanDates.length - 1]
+        date = value.tests[0]?.updated_at ?? date
         if (value.tests.length > 0) {
             const currentTest = tests.find((test) => test.id === value.tests[0].id)
-            editorIds[indexOfTestPlan] = currentTest?.user ?? editorIds[indexOfTestPlan]
+            editorId = currentTest?.user ?? editorId
         }
-        const editor = (editorIds[indexOfTestPlan] != null) ?
-            users.find((value) => value.id === editorIds[indexOfTestPlan]) : null
+        const editor = (editorId != null) ?
+            users.find((value) => value.id === editorId) : null
         const editorName = (editor != null) ? editor.username : "Не назначен"
         dataForLineChart = dataForLineChart.concat(value.tests)
         value.tests.forEach((test) => {
@@ -87,16 +86,14 @@ const Project: React.FC = () => {
 
         const toReturn = [value.id, value.name, results.all]
         statuses.map((status) => toReturn.push(results[status.name.toLowerCase()]))
-        toReturn.push(testPlanDates[testPlanDates.length - 1], editorName)
+        toReturn.push(date, editorName)
         return toReturn
     });
     projectTableData.sort(([, , , , , , firstDate,], [, , , , , , secondDate,]) =>
         (moment(secondDate, "YYYY-MM-DDThh:mm").valueOf() - moment(firstDate, "YYYY-MM-DDThh:mm").valueOf()))
     const personalTableData = projectTableData.filter((value) => value[value.length - 1] === currentUsername)
 
-    const [statusesShow, setStatusesToShow] = React.useState<{ [key: string]: boolean; }>(
-        {}
-    );
+    const [statusesShow, setStatusesToShow] = React.useState<{ [key: string]: boolean; }>({});
 
     const charts = [<LineChartComponent tests={dataForLineChart}/>, <PieChartComponent tests={tests}/>];
 
@@ -125,33 +122,6 @@ const Project: React.FC = () => {
                 console.log(e);
             });
     }, [])
-
-    const activityTitle = <Stack direction={"row"}>
-        <Zoom in={!isSwitched}>
-            <Typography fontSize={24} mr={'5px'} ml={'5px'}>
-                Активность проекта
-            </Typography>
-        </Zoom>
-        <Switch checked={isSwitched} onChange={handleOnSwitch}/>
-        <Zoom in={!isSwitched}>
-            <Typography fontSize={24} mr={'5px'} ml={'5px'} color={'grey'}>
-                Моя
-            </Typography>
-        </Zoom>
-    </Stack>
-    const switchedActivityTitle = <Stack direction={"row"}>
-        <Zoom in={isSwitched}>
-            <Typography fontSize={24} mr={'5px'} ml={'5px'} color={'grey'}>
-                Проекта
-            </Typography>
-        </Zoom>
-        <Switch checked={isSwitched} onChange={handleOnSwitch}/>
-        <Zoom in={isSwitched}>
-            <Typography fontSize={24} mr={'5px'} ml={'5px'}>
-                Моя активность
-            </Typography>
-        </Zoom>
-    </Stack>
 
     const filter = <Zoom in={showFilter} style={{marginBottom: '10px', marginTop: "10px"}}>
         <Grid sx={{display: 'flex', justifyContent: 'center'}}>
@@ -240,7 +210,27 @@ const Project: React.FC = () => {
                     }}>
                     <Stack>
                         <Stack display={'flex'} flexDirection={"row"} justifyContent={"center"} mb={'10px'}>
-                            {isSwitched ? switchedActivityTitle : activityTitle}
+                            <Stack direction={"row"}>
+                                {isSwitched ?
+                                    <Typography fontSize={24} mr={'5px'} ml={'5px'} color={'grey'}>
+                                        Проекта
+                                    </Typography>
+                                    :
+                                    <Typography fontSize={24} mr={'5px'} ml={'5px'}>
+                                        Активность проекта
+                                    </Typography>
+                                }
+                                <Switch checked={isSwitched} onChange={handleOnSwitch}/>
+                                {isSwitched ?
+                                    <Typography fontSize={24} mr={'5px'} ml={'5px'}>
+                                        Моя активность
+                                    </Typography>
+                                    :
+                                    <Typography fontSize={24} mr={'5px'} ml={'5px'} color={'grey'}>
+                                        Моя
+                                    </Typography>
+                                }
+                            </Stack>
                             <Button variant="contained"
                                     style={{marginLeft: '10px'}}
                                     onClick={handleOnOpenFilter}>Фильтр</Button>
