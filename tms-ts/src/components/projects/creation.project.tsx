@@ -38,7 +38,7 @@ const CreationProject: React.FC<Props> = ({setProjects}) => {
             marginTop: 10,
             marginLeft: 5,
             marginRight: 5,
-            minWidth: 750
+            // minWidth: 750
         }}>
             <div style={{
                 alignItems: 'center',
@@ -50,10 +50,10 @@ const CreationProject: React.FC<Props> = ({setProjects}) => {
                     display: 'flex',
                     flexDirection: 'row',
                     marginTop: 10,
-                    width: 700
+                    width: "85%"
                 }}>
                     <Typography variant="h6"
-                                style={{marginTop: 25, width: 300}}>
+                                style={{marginTop: 25, paddingRight: 5, width: 300}}>
                         Название проекта
                     </Typography>
                     <TextField
@@ -74,10 +74,10 @@ const CreationProject: React.FC<Props> = ({setProjects}) => {
                     display: 'flex',
                     flexDirection: 'row',
                     marginTop: 10,
-                    width: 700
+                    width: "85%"
                 }}>
                     <Typography variant="h6"
-                                style={{marginTop: 25, width: 300}}>
+                                style={{marginTop: 25, marginRight: 5, width: 300}}>
                         О проекте
                     </Typography>
                     <TextField
@@ -98,8 +98,8 @@ const CreationProject: React.FC<Props> = ({setProjects}) => {
                 </div>
                 <div style={{
                     textAlign: 'right',
-                    width: 700,
                     marginTop: 10,
+                    width: "85%"
                 }}>
                     <Button
                         // type="submit"

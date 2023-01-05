@@ -23,7 +23,6 @@ import PieChartComponent from "./charts/pie.chart.component";
 import {DesktopDatePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import moment, {Moment} from "moment";
 import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
-import {useNavigate} from "react-router-dom";
 import {test, testPlan, user} from "../models.interfaces";
 import ProjectService from "../../services/project.service";
 import {statuses} from "../model.statuses";
@@ -32,7 +31,6 @@ import ProjectSettings from "./project.settings";
 
 const Project: React.FC = () => {
     const classes = useStyles();
-    const navigate = useNavigate();
     const labels = [['ID', '#000000'], ['НАЗВАНИЕ ТЕСТ-ПЛАНА', '#000000'], ['ВСЕГО ТЕСТОВ', '#000000']];
     const minStatusIndex = labels.length;
     statuses.map((status) => labels.push([status.name.toUpperCase(), status.color]))
