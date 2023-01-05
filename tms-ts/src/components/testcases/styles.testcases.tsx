@@ -57,10 +57,6 @@ export default makeStyles({
     },
     gridEditDelete: {
         display: "flex"
-        // textAlign: "end",
-        // display: "flex",
-        // justifyContent: "flex-end",
-        // width: 30
     },
     caseNameCell: {
         wordBreak: "break-word"
@@ -69,10 +65,6 @@ export default makeStyles({
         display: "flex",
         justifyContent: "flex-end",
         padding: 5
-        // display: "flex",
-        // justifyContent: "flex-end",
-        // textAlign: "end",
-        // minWidth: 60
     },
     suiteNameGrid: {
         display: "flex",
@@ -142,7 +134,7 @@ export default makeStyles({
     },
     checkBox: {
         height: 20,
-        width: 20
+        width: 20,
     },
     suiteChip: {
         borderRadius: 20,

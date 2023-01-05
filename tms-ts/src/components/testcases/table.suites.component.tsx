@@ -204,11 +204,15 @@ function Row(props: {
                                     SuiteCaseService.getSuiteById(response.data.parent).then((response) => {
                                         setSelectedSuiteCome({id: response.data.id, name: response.data.name})
                                         setShowCreationSuite(true)
+                                    }).catch((e) => {
+                                        console.log(e)
                                     })
                                 } else {
                                     setSelectedSuiteCome(null)
                                     setShowCreationSuite(true)
                                 }
+                            }).catch((e) => {
+                                console.log(e)
                             })
                             setInfoSuiteForEdit({id: row.id, name: row.name})
                         }}>
