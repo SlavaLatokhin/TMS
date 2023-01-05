@@ -58,8 +58,9 @@ const Header: React.FC = () => {
     const buttonsAtNavBar = () => {
         if (isProjectOpen) {
             return (
-                buttons.map(([button_name, path]) => (
+                buttons.map(([button_name, path], index) => (
                     <Button
+                        key={index}
                         sx={{
                             color: 'white',
                             fontWeight: 600
@@ -227,17 +228,17 @@ const Header: React.FC = () => {
                                     }}
                                 > Профиль </Typography>
                             </MenuItem>
-                            <MenuItem key={"Настройки"} onClick={() =>
-                                handleCloseUserMenuAndNavigate("/settings")
-                            }>
-                                <Typography
-                                    textAlign="center"
-                                    sx={{
-                                        color: 'inherit',
-                                        textDecoration: 'none',
-                                    }}
-                                > Настройки </Typography>
-                            </MenuItem>
+                            {/*<MenuItem key={"Настройки"} onClick={() =>*/}
+                            {/*    handleCloseUserMenuAndNavigate("/settings")*/}
+                            {/*}>*/}
+                            {/*    <Typography*/}
+                            {/*        textAlign="center"*/}
+                            {/*        sx={{*/}
+                            {/*            color: 'inherit',*/}
+                            {/*            textDecoration: 'none',*/}
+                            {/*        }}*/}
+                            {/*    > Настройки </Typography>*/}
+                            {/*</MenuItem>*/}
                             <MenuItem key={"Выйти"} onClick={handleLogout}>
                                 <Typography
                                     textAlign="center"
