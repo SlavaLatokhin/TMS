@@ -19,29 +19,15 @@ function DeletionDialogElement(props: {
         selectedForDeletion, setSelectedForDeletion, setSelectedSuiteForTreeView, selectedSuiteForTreeView,
         setDetailedCaseInfo, detailedCaseInfo
     } = props
+
     function disagreeToDelete() {
         setOpenDialogDeletion(false)
     }
 
     function agreeToDelete() {
-        if (componentForDeletion.type == "case") {
-            const indexInSelected = selectedForDeletion.indexOf(componentForDeletion.id)
-            if (indexInSelected !== -1) {
-                let newSelected: number[] = [];
-                if (indexInSelected === 0) {
-                    newSelected = newSelected.concat(selectedForDeletion.slice(1));
-                } else if (indexInSelected === selectedForDeletion.length - 1) {
-                    newSelected = newSelected.concat(selectedForDeletion.slice(0, -1));
-                } else if (indexInSelected > 0) {
-                    newSelected = newSelected.concat(
-                        selectedForDeletion.slice(0, indexInSelected),
-                        selectedForDeletion.slice(indexInSelected + 1),
-                    );
-                }
-                setSelectedForDeletion(newSelected);
-            }
+        if (componentForDeletion.type === "case") {
             SuiteCaseService.deleteCase(componentForDeletion.id).then(() => {
-                if (detailedCaseInfo.show && detailedCaseInfo.myCase.id === componentForDeletion.id){
+                if (detailedCaseInfo.show && detailedCaseInfo.myCase.id === componentForDeletion.id) {
                     setDetailedCaseInfo({
                         show: false, myCase: {
                             id: -1,
@@ -55,14 +41,28 @@ function DeletionDialogElement(props: {
                         }
                     })
                 }
-                // SuiteCaseService.getTreeSuites().then((response) => {
-                //     setTreeSuites(response.data)
-                // })
                 SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
                     setSelectedSuiteForTreeView(response.data)
+                    const indexInSelected = selectedForDeletion.indexOf(componentForDeletion.id)
+                    if (indexInSelected !== -1) {
+                        let newSelected: number[] = [];
+                        if (indexInSelected === 0) {
+                            newSelected = newSelected.concat(selectedForDeletion.slice(1));
+                        } else if (indexInSelected === selectedForDeletion.length - 1) {
+                            newSelected = newSelected.concat(selectedForDeletion.slice(0, -1));
+                        } else if (indexInSelected > 0) {
+                            newSelected = newSelected.concat(
+                                selectedForDeletion.slice(0, indexInSelected),
+                                selectedForDeletion.slice(indexInSelected + 1),
+                            );
+                        }
+                        setSelectedForDeletion(newSelected);
+                    }
                 }).catch((e) => {
                     console.log(e)
                 })
+            }).catch((e) => {
+                console.log(e)
             })
         } else {
             SuiteCaseService.deleteSuite(componentForDeletion.id).then(() => {
@@ -73,6 +73,8 @@ function DeletionDialogElement(props: {
                         window.location.assign("/testcases");
                     }
                 })
+            }).catch((e) => {
+                console.log(e)
             })
         }
         setOpenDialogDeletion(false)

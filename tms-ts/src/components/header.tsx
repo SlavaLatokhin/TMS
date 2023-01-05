@@ -13,13 +13,10 @@ import MenuItem from '@mui/material/MenuItem';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import {NotificationsActive} from "@mui/icons-material";
 import AuthService from "../services/Authorization/auth.service";
-import {useNavigate} from "react-router-dom";
 
 const buttons = [['Тест-кейсы', "/testcases"], ['Тест-планы', "/testplans"]];
 
 const Header: React.FC = () => {
-    const navigate = useNavigate()
-
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
 
@@ -37,7 +34,7 @@ const Header: React.FC = () => {
 
     const handleCloseNavMenuAndNavigate = (href: string) => {
         setAnchorElNav(null);
-        navigate(href);
+        window.location.assign(href);
     };
 
     const handleCloseUserMenu = () => {
@@ -46,7 +43,7 @@ const Header: React.FC = () => {
 
     const handleCloseUserMenuAndNavigate = (href: string) => {
         setAnchorElUser(null);
-        navigate(href);
+        window.location.assign(href);
     };
 
     const handleLogout = () => {
@@ -58,8 +55,9 @@ const Header: React.FC = () => {
     const buttonsAtNavBar = () => {
         if (isProjectOpen) {
             return (
-                buttons.map(([button_name, path]) => (
+                buttons.map(([button_name, path], index) => (
                     <Button
+                        key={index}
                         sx={{
                             color: 'white',
                             fontWeight: 600
@@ -227,17 +225,17 @@ const Header: React.FC = () => {
                                     }}
                                 > Профиль </Typography>
                             </MenuItem>
-                            <MenuItem key={"Настройки"} onClick={() =>
-                                handleCloseUserMenuAndNavigate("/settings")
-                            }>
-                                <Typography
-                                    textAlign="center"
-                                    sx={{
-                                        color: 'inherit',
-                                        textDecoration: 'none',
-                                    }}
-                                > Настройки </Typography>
-                            </MenuItem>
+                            {/*<MenuItem key={"Настройки"} onClick={() =>*/}
+                            {/*    handleCloseUserMenuAndNavigate("/settings")*/}
+                            {/*}>*/}
+                            {/*    <Typography*/}
+                            {/*        textAlign="center"*/}
+                            {/*        sx={{*/}
+                            {/*            color: 'inherit',*/}
+                            {/*            textDecoration: 'none',*/}
+                            {/*        }}*/}
+                            {/*    > Настройки </Typography>*/}
+                            {/*</MenuItem>*/}
                             <MenuItem key={"Выйти"} onClick={handleLogout}>
                                 <Typography
                                     textAlign="center"

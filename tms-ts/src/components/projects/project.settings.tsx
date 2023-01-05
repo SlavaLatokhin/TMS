@@ -1,21 +1,12 @@
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import {Chip, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import {Chip} from "@mui/material";
+import React, {ChangeEvent, FormEvent, useEffect, useState} from "react";
 import useStyles from "../../styles/styles";
 import {Grid, Button, Dialog, IconButton, TextField, InputAdornment, Typography} from "@mui/material";
 import ProjectService from "../../services/project.service";
-import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import {alpha} from "@material-ui/core";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
-import FolderCopyOutlinedIcon from "@mui/icons-material/FolderCopyOutlined";
-import BlockIcon from "@mui/icons-material/Block";
-import CheckboxTree from 'react-checkbox-tree';
-import {param, testPlan} from "../models.interfaces";
-import TestPlanService from "../../services/testplan.service";
 import SuiteCaseService from "../../services/suite.case.service";
+import {XMLParser} from "fast-xml-parser";
+import {suite} from "../testcases/suites.component";
 
 interface Props {
     show: boolean;
@@ -53,42 +44,42 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
 
 
     const [disable, setDisable] = useState(false)
-    const [paramsChecked, setParamsChecked] = useState<Array<string>>([])
-    const [paramsExpanded, setParamsExpanded] = useState<Array<string>>([])
-    const [params, setParams] = useState<param [] | null>(null)
-    const nodes = [{value: 'no', label: 'Без параметров', icon: <BlockIcon className={classes.icons}/>},
-        {value: 'all', label: 'Все параметры', children: nodesChildren(), disabled: disable}];
+    // const [paramsChecked, setParamsChecked] = useState<Array<string>>([])
+    // const [paramsExpanded, setParamsExpanded] = useState<Array<string>>([])
+    // const [params, setParams] = useState<param [] | null>(null)
+    // const nodes = [{value: 'no', label: 'Без параметров', icon: <BlockIcon className={classes.icons}/>},
+    //     {value: 'all', label: 'Все параметры', children: nodesChildren(), disabled: disable}];
 
 
-    function nodesChildren() {
-        let arr: Node[] = [];
-        params?.map((param) => {
-            let flag = false
-            for (let node in arr) {
-                if (arr[node].label == param.group_name) {
-                    if (arr[node].children) {/*а это всегда true, но пусть будет*/
-                        arr[node].children?.push({
-                            value: String(param.id),
-                            label: param.data,
-                            disabled: disable,
-                            icon: false
-                        })
-                    }
-                    flag = true
-                }
-            }
-            if (!flag) {
-                arr.push({
-                    value: param.group_name,
-                    label: param.group_name,
-                    children: [{value: String(param.id), label: param.data, disabled: disable, icon: false}],
-                    disabled: disable
-                })
-            }
-        })
-
-        return arr
-    }
+    // function nodesChildren() {
+    //     let arr: Node[] = [];
+    //     params?.map((param) => {
+    //         let flag = false
+    //         for (let node in arr) {
+    //             if (arr[node].label == param.group_name) {
+    //                 if (arr[node].children) {/*а это всегда true, но пусть будет*/
+    //                     arr[node].children?.push({
+    //                         value: String(param.id),
+    //                         label: param.data,
+    //                         disabled: disable,
+    //                         icon: false
+    //                     })
+    //                 }
+    //                 flag = true
+    //             }
+    //         }
+    //         if (!flag) {
+    //             arr.push({
+    //                 value: param.group_name,
+    //                 label: param.group_name,
+    //                 children: [{value: String(param.id), label: param.data, disabled: disable, icon: false}],
+    //                 disabled: disable
+    //             })
+    //         }
+    //     })
+    //
+    //     return arr
+    // }
 
 
     const onChangeProjectName = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,16 +174,81 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
         }
     }
 
-    useEffect(() => {
-            TestPlanService.getParameters().then((response) => {
-                const localParams = response.data
-                setParams(localParams)
-            })
-                .catch((e) => {
-                    console.log(e);
-                });
-        }, []
-    )
+    const parser = new XMLParser();
+    const getDescription = (custom: any) => `Preconditions: ${custom['preconds']} \n
+    Steps: ${custom['steps']} \n
+    Expected: ${custom['expected']}`
+
+    const loadCases = (cases: any, suiteId: number) => {
+        let allCases = [cases["case"]]
+        if (Symbol.iterator in Object(cases["case"])) {
+            allCases = cases["case"]
+        }
+        Array.prototype.forEach.call(allCases, (testCase: { [key: string]: string; }) => {
+            const description = getDescription(testCase["custom"])
+            const newCase = {
+                name: testCase["title"],
+                suite: suiteId,
+                project: projectValue.id,
+                scenario: description !== "" ? description : "Nothing"
+            }
+            SuiteCaseService.createCase(newCase).catch(e => console.log(e))
+        })
+    }
+    const loadSuites = (sections: any, parentId: number | null) => {
+        let allSections = [sections["section"]]
+        if (Symbol.iterator in Object(sections["section"])) {
+            allSections = sections["section"]
+        }
+        Array.prototype.forEach.call(allSections, (section: { [key: string]: string; }) => {
+            const suite = {
+                name: section["name"],
+                parent: parentId,
+                project: projectValue.id,
+            }
+            let suiteId = 0;
+            SuiteCaseService.createSuite(suite).then(() => {
+                SuiteCaseService.getSuites().then((response) => {
+                    const allSuites: suite[] = response.data
+                    allSuites.sort((a, b) => b.id - a.id)
+                    suiteId = allSuites.find((suite) => suite.name === section["name"])?.id ?? suiteId
+                    loadCases(section["cases"], suiteId)
+                    console.log(section["name"], section["sections"])
+                    if (!section["sections"]) return;
+                    loadSuites(section["sections"], suiteId)
+                })
+
+            }).catch(e => console.log(e))
+        })
+    }
+    const handleLoadTestCases = (event: ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.files) return;
+        const uploadedFile = event.target.files[0];
+
+        event.preventDefault()
+        const reader = new FileReader()
+        if (!uploadedFile) return;
+        reader.readAsText(uploadedFile)
+        reader.onload = function () {
+            if (!reader.result) return;
+            const suite = parser.parse(reader.result.toString().replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ""))["suite"]
+            loadSuites(suite["sections"], null)
+        };
+        reader.onerror = function () {
+            console.log(reader.error);
+        };
+    }
+
+    // useEffect(() => {
+    //         TestPlanService.getParameters().then((response) => {
+    //             const localParams = response.data
+    //             setParams(localParams)
+    //         })
+    //             .catch((e) => {
+    //                 console.log(e);
+    //             });
+    //     }, []
+    // )
 
 
     return (
@@ -287,7 +343,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                     </div>
                     <div style={{display: 'flex', flexDirection: 'row'}}>
                         <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}/>
-                        <div style={{paddingRight: "8%"}}>
+                        <div style={{width: "76%"}}>
                             <Grid className={classes.stackTags}>
                                 {defaultStatuses.map((status, index) =>
                                     <Chip key={index} label={status.name}
@@ -304,6 +360,29 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 )}
                             </Grid>
                         </div>
+                    </div>
+                    <div style={{marginTop: "50px", display: 'flex', flexDirection: 'row'}}>
+                        <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}>
+                            <Typography variant="h6"
+                                        style={{
+                                            paddingTop: "14px"
+                                        }}>
+                                Импорт тест-кейсов (.xml)
+                            </Typography>
+                        </div>
+                        <Button
+                            variant="contained"
+                            style={{
+                                    alignSelf: "center"}}
+                            component="label"
+                        >
+                            Импортировать
+                            <input
+                                type="file"
+                                onChange={handleLoadTestCases}
+                                hidden
+                            />
+                        </Button>
                     </div>
                     {/*<Grid container spacing={2} className={classes.gridContent}>*/}
                     {/*    <Grid item xs={2}>*/}

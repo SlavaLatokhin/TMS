@@ -8,13 +8,12 @@ import React, {useEffect, useState} from "react";
 import useStyles from "../../styles/styles";
 import {Grid, Button, Dialog, TextField, Typography} from "@mui/material";
 import SuiteCaseService from "../../services/suite.case.service";
-import {CustomWidthTooltip, myCase, suite, treeSuite} from "./suites.component";
+import {CustomWidthTooltip, myCase, treeSuite} from "./suites.component";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 interface Props {
     show: boolean;
     setShow: (show: boolean) => void;
-    suites: suite [];
     selectedSuiteCome: { id: number, name: string } | null;
     setTreeSuites: (treeSuites: treeSuite[]) => void;
     infoCaseForEdit: myCase | null;
@@ -22,14 +21,13 @@ interface Props {
     setDetailedCaseInfo: (myCase: { show: boolean, myCase: myCase }) => void,
     detailedCaseInfo: { show: boolean, myCase: myCase },
     setLastEditCase: (id: number) => void,
-    setSelectedSuiteForTreeView : (suite: treeSuite) => void,
+    setSelectedSuiteForTreeView: (suite: treeSuite) => void,
     selectedSuiteForTreeView: treeSuite
 }
 
 const CreationCase: React.FC<Props> = ({
                                            show,
                                            setShow,
-                                           suites,
                                            selectedSuiteCome,
                                            infoCaseForEdit,
                                            setInfoCaseForEdit,
@@ -41,8 +39,8 @@ const CreationCase: React.FC<Props> = ({
                                        }) => {
     const classes = useStyles()
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string }>({
-        id: suites[0].id,
-        name: suites[0].name,
+        id: selectedSuiteForTreeView.id,
+        name: selectedSuiteForTreeView.name,
     })
 
     const [name, setName] = useState("")
@@ -60,7 +58,22 @@ const CreationCase: React.FC<Props> = ({
     const [setup, setSetup] = useState("")
     const [teardown, setTeardown] = useState("")
 
+    const [suitesForSelect, setSuitesForSelect] = useState<{ id: number, name: string }[] | treeSuite[]>([])
+
+
     useEffect(() => {
+        const suitesForSelect: { id: number, name: string }[] = []
+        const fillSuitesForSelect = (childrenSuitesArr: treeSuite[]) => {
+            childrenSuitesArr.map((suite) => {
+                suitesForSelect.push({id: suite.id, name: suite.name})
+                if (suite.children.length > 0) {
+                    fillSuitesForSelect(suite.children)
+                }
+            })
+        }
+        suitesForSelect.push({id: selectedSuiteForTreeView.id, name: selectedSuiteForTreeView.name})
+        fillSuitesForSelect(selectedSuiteForTreeView.children)
+        setSuitesForSelect(suitesForSelect)
         if (selectedSuiteCome) {
             setSelectedSuite(selectedSuiteCome)
         }
@@ -159,9 +172,13 @@ const CreationCase: React.FC<Props> = ({
             }
             if (infoCaseForEdit) {
                 SuiteCaseService.editCase({...myCase, url: infoCaseForEdit.url, id: infoCaseForEdit.id}).then(() => {
-                   SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response)=>{
-                       setSelectedSuiteForTreeView(response.data)
-                   })
+                    SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
+                        setSelectedSuiteForTreeView(response.data)
+                    }).catch((e) => {
+                        console.log(e)
+                    })
+                }).catch((e) => {
+                    console.log(e)
                 })
                 if (infoCaseForEdit.id === detailedCaseInfo.myCase.id && detailedCaseInfo.show) {
                     setLastEditCase(infoCaseForEdit.id)
@@ -169,9 +186,13 @@ const CreationCase: React.FC<Props> = ({
                 }
             } else {
                 SuiteCaseService.createCase(myCase).then(() => {
-                    SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response)=>{
+                    SuiteCaseService.getTreeBySetSuite(selectedSuiteForTreeView.id).then((response) => {
                         setSelectedSuiteForTreeView(response.data)
+                    }).catch((e) => {
+                        console.log(e)
                     })
+                }).catch((e) => {
+                    console.log(e)
                 })
             }
             handleClose()
@@ -191,6 +212,16 @@ const CreationCase: React.FC<Props> = ({
     const chooseSuite = (e: any) => {
         setSelectedSuite({id: e.target.value.id, name: e.target.value.name})
     }
+
+    const MenuProps = {
+        PaperProps: {
+            style: {
+                maxHeight: "30%",
+                maxWidth: "30%",
+                overflow: "auto"
+            },
+        },
+    };
 
     return (
         <Dialog
@@ -315,9 +346,10 @@ const CreationCase: React.FC<Props> = ({
                                     label="Выберите сьюту"
                                     onChange={(e) => chooseSuite(e)}
                                     renderValue={(selected) => <Grid>{selected}</Grid>}
+                                    MenuProps={MenuProps}
                                 >
-                                    {suites.map((suite, index) => <MenuItem key={index}
-                                                                            value={suite as any}>{suite.name}</MenuItem>)}
+                                    {suitesForSelect.map((suite, index) => <MenuItem key={index}
+                                                                                     value={suite as any}>{suite.name}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Grid>

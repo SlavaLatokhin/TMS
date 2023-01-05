@@ -1,4 +1,4 @@
-import {makeStyles} from "@material-ui/core/styles";
+import {makeStyles} from "@mui/styles";
 
 
 export default makeStyles({
@@ -57,10 +57,6 @@ export default makeStyles({
     },
     gridEditDelete: {
         display: "flex"
-        // textAlign: "end",
-        // display: "flex",
-        // justifyContent: "flex-end",
-        // width: 30
     },
     caseNameCell: {
         wordBreak: "break-word"
@@ -69,17 +65,13 @@ export default makeStyles({
         display: "flex",
         justifyContent: "flex-end",
         padding: 5
-        // display: "flex",
-        // justifyContent: "flex-end",
-        // textAlign: "end",
-        // minWidth: 60
     },
     suiteNameGrid: {
         display: "flex",
         flexDirection: "row",
         marginTop: 1,
         marginBottom: 0.32,
-        maxWidth: 500
+        maxWidth: "100%",
     },
     iconButtonDeleteSuite: {
         marginLeft: 20,
@@ -142,7 +134,7 @@ export default makeStyles({
     },
     checkBox: {
         height: 20,
-        width: 20
+        width: 20,
     },
     suiteChip: {
         borderRadius: 20,
@@ -151,19 +143,33 @@ export default makeStyles({
         cursor: "pointer",
         display: "flex",
         flexDirection: "row",
+        wordBreak: "break-all"
     },
     suitePaper: {
         borderRadius: 20,
         backgroundColor: "#eeeeee",
         padding: 7,
-        cursor: "pointer",
         margin: 10,
         width: "50%",
+        wordBreak: "break-all"
     },
     cellSuiteChip:{
         padding: "8px 0px 1px 20px"
     },
     addCaseSuiteCell: {
         marginLeft: 10
+    },
+    numOfSuitesCases: {
+        margin: 5
+    },
+    linkSuite: {
+        textDecoration: "none",
+        color: "black",
+        fontSize: 18,
+        marginLeft: 5,
+        fontWeight: 500,
+        "&:hover": {
+            textDecoration: "underline",
+        },
     }
 })

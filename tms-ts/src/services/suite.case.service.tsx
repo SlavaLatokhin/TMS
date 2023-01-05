@@ -12,6 +12,10 @@ export default class SuiteCaseService {
         }
     }
 
+    static getSuiteById(id: number) {
+        return axiosTMS.get("api/v1/suites/" + id + "/")
+    }
+
     static getCases() {
         const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : null}').id
         if (projectId) {
@@ -61,7 +65,11 @@ export default class SuiteCaseService {
         return axiosTMS.put("api/v1/cases/" + myCase.id + "/", myCase)
     }
 
-    static createSuite(suite: { parent: number | null; name: string }) {
+    static editSuite(suite: { id: number; parent: number | null; name: string; project: number }) {
+        return axiosTMS.put("api/v1/suites/" + suite.id + "/", suite)
+    }
+
+    static createSuite(suite: { parent: number | null; name: string; project: number }) {
         return axiosTMS.post("api/v1/suites/", suite)
     }
 }

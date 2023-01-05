@@ -4,7 +4,7 @@ import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRou
 import BookIcon from '@mui/icons-material/Book';
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import {ButtonBase, Collapse, Grid, Link} from "@mui/material";
+import {Collapse} from "@mui/material";
 import {KeyboardArrowDown} from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import CreationProject from "./creation.project";
@@ -65,7 +65,7 @@ const ProjectSelection: React.FC = () => {
                     <CreationProject setProjects={setProjects}/>
                 </Collapse>
 
-                {projects.map((project, index) =>
+                {projects.map((project) =>
                     <div key={project.name} style={{
                         flexDirection: 'row',
                         display: 'flex',
@@ -74,12 +74,12 @@ const ProjectSelection: React.FC = () => {
                     }}
                          onClick={() => loginToProject(project)}>
                         <BookIcon style={{marginTop: 0, fontSize: 30}}/>
-                        <div style={{marginLeft: "3%", width: "10%"}}>
+                        <div style={{marginLeft: "2%", width: "21%", wordBreak: "break-word"}}>
                             <Typography variant="h6">
                                 {project.name}
                             </Typography>
                         </div>
-                        <div style={{width: "77%", marginLeft: "5%", textAlign: "left"}}>
+                        <div style={{width: "70%", marginLeft: "2%", textAlign: "left", wordBreak: "break-word"}}>
                             <Typography variant="h6">
                                 {project.description}
                             </Typography>
