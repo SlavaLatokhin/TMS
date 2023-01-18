@@ -55,14 +55,6 @@ export default makeStyles({
             marginTop: 0
         }
     },
-    textFieldTestplansAndTests: {
-        "& .MuiFormLabel-root": {
-            margin: 0,
-
-        },
-        maxWidth: "90%",
-
-    },
     gridContent: {
         marginTop: 17,
     },
@@ -146,12 +138,7 @@ export default makeStyles({
         overflowY: "hidden",
         maxHeight: 43,
     },
-    icons: {
-        // fontSize: 'small',
-        width: '1em',
-        textAlign: 'center',
-        color: 'primary',
-    },
+
     tree: {
         fontSize: 'small'
     },

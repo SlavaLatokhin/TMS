@@ -52,4 +52,24 @@ export default makeStyles({
         marginLeft: "3%",
         minHeight: "93%"
     },
+    icons: {
+        width: '1em',
+        textAlign: 'center',
+        color: 'primary',
+    },
+    paperCreation: {
+        minWidth: "94%",
+        minHeight: "93%",
+    },
+    textFieldTestplansAndTests: {
+        "& .MuiFormLabel-root": {
+            margin: 0,
+
+        },
+        maxWidth: "90%",
+
+    },
+    gridContent: {
+        marginTop: 17,
+    },
 })
