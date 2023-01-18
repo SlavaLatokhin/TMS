@@ -13,7 +13,7 @@ import TestplanInfo from "./testplan.info";
 import SplitterLayout from "react-splitter-layout";
 import useStyles from "./styles.testplans";
 import DetailedTestInfo from "./detailed.test.info";
-import DeletionDialogTestPlans from "./deletion.dialog.elements";
+import DeletionDialogTestPlans from "./deletion.dialog.testplans.component";
 import {defaultStatus, statuses} from "../model.statuses";
 import ProfileService from "../../services/profile.service";
 
