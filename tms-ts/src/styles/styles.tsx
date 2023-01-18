@@ -83,15 +83,6 @@ export default makeStyles({
             margin: 0
         }
     },
-    checkboxTests: {
-        margin: 0,
-        "& .MuiFormControlLabel-root": {
-            margin: 0
-        },
-        "& .MuiFormLabel-root": {
-            margin: 0
-        }
-    },
     divLogin: {
         margin: 20,
         display: 'flex',
@@ -221,13 +212,7 @@ export default makeStyles({
     splitter: {
         maxWidth: "80%"
     },
-    tableCellTests: {
-        "& .MuiTableCell-root": {
-            paddingBottom: 0,
-            paddingTop: 0
-        },
 
-    },
     centeredField: {
         "& .MuiFormLabel-root": {
             marginTop: 0

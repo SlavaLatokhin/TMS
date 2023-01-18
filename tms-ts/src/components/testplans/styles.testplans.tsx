@@ -72,4 +72,33 @@ export default makeStyles({
     gridContent: {
         marginTop: 17,
     },
+    divTestInfo: {
+        padding: 20,
+        wordBreak: "break-word"
+    },
+    divTestInfoTitle: {
+        display: "flex",
+        justifyContent: "space-between"
+    },
+    divBold: {
+        fontWeight: 'bold',
+    },
+    divTestInfoScenario: {
+        paddingBottom: "30px"
+    },
+    cellCheckbox: {
+        width: "5%",
+        padding: "7px 15px 13px 15px",
+        textAlign: "center",
+    },
+    checkboxTests: {
+        margin: 0,
+        "& .MuiFormControlLabel-root": {
+            margin: 0
+        },
+        "& .MuiFormLabel-root": {
+            margin: 0
+        }
+    },
+
 })
