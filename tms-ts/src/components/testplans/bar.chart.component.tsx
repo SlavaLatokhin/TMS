@@ -1,9 +1,16 @@
 import React from 'react';
 import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
 
+interface Props {
+    passed: number;
+    skipped: number;
+    failed: number;
+    blocked: number;
+    untested: number;
+    broken: number
+}
 
-const BarChartComponent = (props: { passed: number, skipped: number, failed: number, blocked: number, untested: number, broken: number }) => {
-    const {passed, skipped, failed, blocked, untested, broken} = props;
+const BarChartComponent: React.FC<Props> = ({passed, skipped, failed, blocked, untested, broken}) => {
     const data = [
         {
             passed: passed,
@@ -17,13 +24,10 @@ const BarChartComponent = (props: { passed: number, skipped: number, failed: num
 
     return (
         <ResponsiveContainer width="100%" aspect={4.0 / 1.3}>
-            <BarChart data={data}
-                      layout="vertical"
-            >
-                <XAxis hide
-                       type="number"/>
+            <BarChart data={data} layout="vertical">
+                <XAxis hide type="number"/>
                 <YAxis hide dataKey="name" reversed type="category"/>
-                <Tooltip wrapperStyle={{zIndex: 1}}/>
+                <Tooltip wrapperStyle={{zIndex: 100}} isAnimationActive={false}/>
                 <Bar legendType="star" label="passed" dataKey="passed" barSize={20} stackId="a" fill="#24b124"/>
                 <Bar legendType="star" label="skipped" dataKey="skipped" stackId="a" fill="#c4af30"/>
                 <Bar legendType="star" label="failed" dataKey="failed" stackId="a" fill="#bd2828"/>
