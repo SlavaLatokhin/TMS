@@ -94,7 +94,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                 test.test_results = response.data
                 let status = statuses.find(i => i.id === statusId)
                 test.last_status_color = status ? status : defaultStatus
-                test.test_results.map(y => {
+                test.test_results.forEach(y => {
                     let status = statuses.find(i => i.id === y.status)
                     y.status_color = status ? status : defaultStatus
                 })

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import TableTestPlans from "./table.testplans.component";
 import TestPlanService from "../../services/testplan.service";
-import CreationTestPlan from "./creation.testplan";
+import CreationTestplanComponent from "./creation.testplan.component";
 import Link from "@mui/material/Link";
 import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
@@ -9,10 +9,10 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import {test, testPlan} from "../models.interfaces";
-import TestplanInfo from "./testplan.info";
+import TestplanInfoComponent from "./testplan.info.component";
 import SplitterLayout from "react-splitter-layout";
 import useStyles from "./styles.testplans";
-import DetailedTestInfo from "./detailed.test.info";
+import DetailedTestInfoComponent from "./detailed.test.info.component";
 import DeletionDialogTestPlans from "./deletion.dialog.testplans.component";
 import {defaultStatus, statuses} from "../model.statuses";
 import ProfileService from "../../services/profile.service";
@@ -74,14 +74,14 @@ const TestplansComponent: React.FC = () => {
             if (testPlanId) {
                 TestPlanService.getTestPlan(testPlanId).then((response) => {
                     let curTestPlan: testPlan = response.data
-                    curTestPlan.tests.map(x => {
+                    curTestPlan.tests.forEach(x => {
                         if (x.current_result) {
                             let status = statuses.find(i => i.name === x.current_result)
                             x.last_status_color = status ? status : defaultStatus
                         } else {
                             x.last_status_color = defaultStatus
                         }
-                        x.test_results.map(y => {
+                        x.test_results.forEach(y => {
                             let status = statuses.find(i => i.id === y.status)
                             y.status_color = status ? status : defaultStatus
                         })
@@ -191,14 +191,14 @@ const TestplansComponent: React.FC = () => {
                             </tr>
                             <tr>
                                 <td>
-                                    {currentTestPlan && <TestplanInfo currentTestPlan={currentTestPlan}
-                                                                      tests={tests}
-                                                                      setShowCreationTestPlan={setShowCreationTestPlan}
-                                                                      setIsForEdit={setIsForEdit}
-                                                                      detailedTestInfo={detailedTestInfo}
-                                                                      setDetailedTestInfo={setDetailedTestInfo}
-                                                                      showEnterResult={showEnterResult}
-                                                                      setShowEnterResult={setShowEnterResult}/>}
+                                    {currentTestPlan && <TestplanInfoComponent currentTestPlan={currentTestPlan}
+                                                                               tests={tests}
+                                                                               setShowCreationTestPlan={setShowCreationTestPlan}
+                                                                               setIsForEdit={setIsForEdit}
+                                                                               detailedTestInfo={detailedTestInfo}
+                                                                               setDetailedTestInfo={setDetailedTestInfo}
+                                                                               showEnterResult={showEnterResult}
+                                                                               setShowEnterResult={setShowEnterResult}/>}
                                 </td>
                             </tr>
                             {treeTestPlans.map((testPlan, index) =>
@@ -215,9 +215,9 @@ const TestplansComponent: React.FC = () => {
                     </TableContainer>
                     {detailedTestInfo && detailedTestInfo.show &&
                     <Grid>
-                        <DetailedTestInfo detailedTestInfo={detailedTestInfo} setDetailedTestInfo={setDetailedTestInfo}
-                                          showEnterResult={showEnterResult}
-                                          setShowEnterResult={setShowEnterResult}/>
+                        <DetailedTestInfoComponent detailedTestInfo={detailedTestInfo} setDetailedTestInfo={setDetailedTestInfo}
+                                                   showEnterResult={showEnterResult}
+                                                   setShowEnterResult={setShowEnterResult}/>
                     </Grid>}
                 </SplitterLayout>
             </div>
@@ -229,10 +229,14 @@ const TestplansComponent: React.FC = () => {
                         height: "45%",
                         backgroundColor: "#FFFFFF",
                         color: "#000000",
+                        "&:hover": {
+                            backgroundColor: "#f6f6f6",
+                            borderColor: "#000000",
+                        }
                     }} onClick={handleShowCreationTestPlan}>Создать тест-план</Button>
-                    <CreationTestPlan show={showCreationTestPlan} setShow={setShowCreationTestPlan}
-                                      testPlans={testPlans}
-                                      isForEdit={isForEdit} setIsForEdit={setIsForEdit}/>
+                    <CreationTestplanComponent show={showCreationTestPlan} setShow={setShowCreationTestPlan}
+                                               testPlans={testPlans}
+                                               isForEdit={isForEdit} setIsForEdit={setIsForEdit}/>
                 </div>
             </div>
         </div>
