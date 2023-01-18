@@ -1,26 +1,22 @@
 import React, {useEffect, useState} from "react";
-import {
-    Checkbox,
-    FormControlLabel,
-    Grid,
-    Link,
-    Table,
-    TableBody,
-    TableCell,
-    TableRow, Typography
-} from "@mui/material";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Link from "@mui/material/Link";
+import Table from "@mui/material/Table";
+import TableCell from "@mui/material/TableCell";
+import Typography from "@mui/material/Typography";
 import BarChartComponent from "./bar.chart.component";
 import {treeTestPlan} from "./testplans.component";
 import TestPlanService from "../../services/testplan.service";
 import {testPlan} from "../models.interfaces";
-
+import useStyles from "./styles.testplans";
 
 const TableTestPlans = (props: {
-    testplan: treeTestPlan
+    testplan: treeTestPlan, selected: number[], setSelected: (data: number[]) => void,
 }) => {
-    const {testplan} = props;
+    const classes = useStyles()
+    const {testplan, selected, setSelected} = props;
     const [currentTestPlan, setCurrentTestPlan] = useState<testPlan>()
-    const [selected, setSelected] = React.useState<number []>([]);
 
     useEffect(() => {
         if (!currentTestPlan) {
@@ -31,9 +27,8 @@ const TableTestPlans = (props: {
                     console.log(e);
                 });
         }
-    }, [currentTestPlan])
+    }, [currentTestPlan, testplan.id])
 
-    // console.log(currentTestPlan)
     const getTestsResults = (currentTestPlan: testPlan | undefined) => {
         const testsResults: { passed: number, skipped: number, failed: number, blocked: number, untested: number, broken: number } = {
             passed: 0,
@@ -45,28 +40,19 @@ const TableTestPlans = (props: {
         }
         if (currentTestPlan?.tests) {
             for (const cur_test of currentTestPlan?.tests) {
-                // console.log(cur_test.current_result)
-                if (typeof (cur_test.current_result) == "string") {
-                    if (cur_test.current_result == "Passed") {
-                        testsResults.passed++
-                    }
-                    if (cur_test.current_result == "Skipped") {
-                        testsResults.skipped++
-                    }
-                    if (cur_test.current_result == "Failed") {
-                        testsResults.failed++
-                    }
-                    if (cur_test.current_result == "Blocked") {
-                        testsResults.blocked++
-                    }
-                    if (cur_test.current_result == "Untested") {
-                        testsResults.untested++
-                    }
-                    if (cur_test.current_result == "Broken") {
-                        testsResults.broken++
-                    }
-                }
-                else if (!cur_test.current_result) {
+                if (cur_test.current_result === "Passed") {
+                    testsResults.passed++
+                } else if (cur_test.current_result === "Skipped") {
+                    testsResults.skipped++
+                } else if (cur_test.current_result === "Failed") {
+                    testsResults.failed++
+                } else if (cur_test.current_result === "Blocked") {
+                    testsResults.blocked++
+                } else if (cur_test.current_result === "Untested") {
+                    testsResults.untested++
+                } else if (cur_test.current_result === "Broken") {
+                    testsResults.broken++
+                } else {
                     testsResults.untested++
                 }
             }
@@ -90,29 +76,28 @@ const TableTestPlans = (props: {
                 selected.slice(selectedIndex + 1),
             );
         }
-
         setSelected(newSelected);
     };
 
     return (
-        <TableRow style={{paddingBottom: 0, paddingTop: 0, paddingRight: 0, marginRight: 0}}>
-            <TableCell style={{paddingBottom: 3}}>
+        <tr>
+            <td style={{paddingBottom: 3}}>
                 <Table size="small">
-                    {<TableBody style={{border: '1px solid'}}>
-                        <TableRow>
-                            <TableCell style={{width: "15%"}}>
+                    {<tbody style={{border: '1px solid'}}>
+                        <tr>
+                            <td className={classes.cellCheckbox}>
                                 <FormControlLabel
                                     label={testplan.id}
                                     control={<Checkbox
-                                        style={{height: 20}}
+                                        sx={{height: 20}}
+                                        checked={selected.indexOf(testplan.id) !== -1}
                                         onClick={(event) => handleClick(event, testplan.id)}
                                         color="primary"
                                     />}
                                 />
-                            </TableCell>
-                            <TableCell style={{width: "auto"}}>
-                                <Grid>
-
+                            </td>
+                            <td style={{width: "auto", maxWidth: "30%", wordBreak: "break-all"}}>
+                                <div>
                                     <Link href={"/testplans/" + testplan.id} underline="none"
                                           style={{display: 'flex', color: '#282828'}}>
                                         <Typography style={{paddingBottom: 2}}>
@@ -120,24 +105,24 @@ const TableTestPlans = (props: {
                                         </Typography>
                                     </Link>
 
-                                </Grid>
-                                <Grid>
+                                </div>
+                                <div>
                                     {"Количество дочерних тест-планов: " + testplan.children.length + ". Количество тестов: " + currentTestPlan?.tests?.length}
-                                </Grid>
-                            </TableCell>
+                                </div>
+                            </td>
                             <TableCell align="right" style={{width: "25%"}}>
                                 <BarChartComponent passed={getTestsResults(currentTestPlan).passed}
                                                    skipped={getTestsResults(currentTestPlan).skipped}
                                                    failed={getTestsResults(currentTestPlan).failed}
                                                    blocked={getTestsResults(currentTestPlan).blocked}
                                                    untested={getTestsResults(currentTestPlan).untested}
-                                                   broken={getTestsResults(currentTestPlan).broken}/> {/*TODO*/}
+                                                   broken={getTestsResults(currentTestPlan).broken}/>
                             </TableCell>
-                        </TableRow>
-                    </TableBody>}
+                        </tr>
+                    </tbody>}
                 </Table>
-            </TableCell>
-        </TableRow>
+            </td>
+        </tr>
     )
 }
 

@@ -55,14 +55,6 @@ export default makeStyles({
             marginTop: 0
         }
     },
-    textFieldTestplansAndTests: {
-        "& .MuiFormLabel-root": {
-            margin: 0,
-
-        },
-        maxWidth: "90%",
-
-    },
     gridContent: {
         marginTop: 17,
     },
@@ -87,15 +79,6 @@ export default makeStyles({
         },
     },
     rootLogin: {
-        "& .MuiFormLabel-root": {
-            margin: 0
-        }
-    },
-    checkboxTests: {
-        margin: 0,
-        "& .MuiFormControlLabel-root": {
-            margin: 0
-        },
         "& .MuiFormLabel-root": {
             margin: 0
         }
@@ -146,12 +129,7 @@ export default makeStyles({
         overflowY: "hidden",
         maxHeight: 43,
     },
-    icons: {
-        // fontSize: 'small',
-        width: '1em',
-        textAlign: 'center',
-        color: 'primary',
-    },
+
     tree: {
         fontSize: 'small'
     },
@@ -234,13 +212,7 @@ export default makeStyles({
     splitter: {
         maxWidth: "80%"
     },
-    tableCellTests: {
-        "& .MuiTableCell-root": {
-            paddingBottom: 0,
-            paddingTop: 0
-        },
 
-    },
     centeredField: {
         "& .MuiFormLabel-root": {
             marginTop: 0
