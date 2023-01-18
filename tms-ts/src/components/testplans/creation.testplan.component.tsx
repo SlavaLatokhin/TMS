@@ -45,7 +45,7 @@ interface Node {
     showCheckbox?: boolean;
 }
 
-const CreationTestPlan: React.FC<Props> = ({
+const CreationTestplanComponent: React.FC<Props> = ({
                                                show,
                                                setShow,
                                                testPlans,
@@ -468,4 +468,4 @@ const CreationTestPlan: React.FC<Props> = ({
     );
 }
 
-export default CreationTestPlan
+export default CreationTestplanComponent
