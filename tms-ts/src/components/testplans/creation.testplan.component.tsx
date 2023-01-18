@@ -46,12 +46,12 @@ interface Node {
 }
 
 const CreationTestplanComponent: React.FC<Props> = ({
-                                               show,
-                                               setShow,
-                                               testPlans,
-                                               isForEdit,
-                                               setIsForEdit,
-                                           }) => {
+                                                        show,
+                                                        setShow,
+                                                        testPlans,
+                                                        isForEdit,
+                                                        setIsForEdit,
+                                                    }) => {
     const classes = useStyles()
 
     const [selectedTestPlan, setSelectedTestPlan] = useState<{ id: number, name: string } | null>(null)
@@ -69,6 +69,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
     const [treeSuites, setTreeSuites] = useState<treeSuite[]>([])
     const [testsChecked, setTestsChecked] = useState<Array<string>>([])
     const [testsExpanded, setTestsExpanded] = useState<Array<string>>([])
+    const [testPlansForSelect, setTestPlansForSelect] = useState<testPlan[]>([])
 
     useEffect(() => {
         TestPlanService.getParameters().then((response) => {
@@ -104,6 +105,19 @@ const CreationTestplanComponent: React.FC<Props> = ({
         }
     }, [isForEdit, testPlans])
 
+    useEffect(() => {
+        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : null}').id
+        if (projectId) {
+            const newTestPlansForSelect: testPlan[] = []
+            testPlans.forEach(testPlan => {
+                if (testPlan.project === projectId) {
+                    newTestPlansForSelect.push(testPlan)
+                }
+            })
+            setTestPlansForSelect(newTestPlansForSelect)
+        }
+    }, [testPlans])
+
     const handleStartDate = (newValue: Moment | null) => {
         setStartDate(newValue);
     };
@@ -136,7 +150,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
 
     function nodesChildren() {
         let arr: Node[] = [];
-        params?.map((param) => {
+        params?.forEach((param) => {
             let flag = false
             for (let node in arr) {
                 if (arr[node].label === param.group_name) {
@@ -168,11 +182,11 @@ const CreationTestplanComponent: React.FC<Props> = ({
 
     function testsNodes(treeSuites: treeSuite[]) {
         let arr: Node[] = []
-        treeSuites.map((suite) => {
+        treeSuites.forEach((suite) => {
             if (suite.children.length !== 0) {
                 let children: Node[] = []
                 if (suite.test_cases.length !== 0) {
-                    suite.test_cases.map((test) => children.push({
+                    suite.test_cases.forEach((test) => children.push({
                         value: String(test.id),
                         label: test.name,
                         icon: false
@@ -187,7 +201,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
             } else {
                 if (suite.test_cases.length !== 0) {
                     let tests: Node[] = []
-                    suite.test_cases.map((test) => tests.push({
+                    suite.test_cases.forEach((test) => tests.push({
                         value: String(test.id),
                         label: test.name,
                         icon: false
@@ -205,45 +219,47 @@ const CreationTestplanComponent: React.FC<Props> = ({
 
 
     const createTestPlan = () => {
-        let params = []
-        if (!paramsChecked.includes('no') && paramsChecked.length !== 0) {
-            for (let i of paramsChecked) {
-                params.push(Number(i))
+        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : null}').id
+        if (projectId) {
+            let params = []
+            if (!paramsChecked.includes('no') && paramsChecked.length !== 0) {
+                for (let i of paramsChecked) {
+                    params.push(Number(i))
+                }
             }
+            let tests = []
+            for (let i of testsChecked) {
+                tests.push(Number(i))
+            }
+            const testPlan = {
+                name: name,
+                project: projectId,
+                parent: selectedTestPlan ? selectedTestPlan.id : null,
+                test_cases: tests,
+                parameters: params,
+                started_at: startDate ? startDate.format('YYYY-MM-DDTHH:mm') : "01.01.1970",
+                due_date: endDate ? endDate.format('YYYY-MM-DDTHH:mm') : "01.01.1970",
+            }
+            if (isForEdit) {
+                TestPlanService.editTestPlan({
+                    ...testPlan,
+                    id: isForEdit.id,
+                    child_test_plans: isForEdit.child_test_plans,
+                    url: isForEdit.url,
+                    is_archive: isForEdit.is_archive
+                }).catch((e) => {
+                    console.log(e)
+                })
+            } else {
+                TestPlanService.createTestPlan(testPlan).then((response) => {
+                    window.location.assign("/testplans/" + response.data[0].id)
+                })
+                    .catch((e) => {
+                        console.log(e);
+                    });
+            }
+            handleClose()
         }
-        let tests = []
-        for (let i of testsChecked) {
-            tests.push(Number(i))
-        }
-        const testPlan = {
-            name: name,
-            project: 1,
-            parent: selectedTestPlan ? selectedTestPlan.id : null,
-            test_cases: tests,
-            parameters: params,
-            started_at: startDate ? startDate.format('YYYY-MM-DDTHH:mm') : "01.01.1970",
-            due_date: endDate ? endDate.format('YYYY-MM-DDTHH:mm') : "01.01.1970",
-        }
-        if (isForEdit) {
-            TestPlanService.editTestPlan({
-                ...testPlan,
-                id: isForEdit.id,
-                child_test_plans: isForEdit.child_test_plans,
-                url: isForEdit.url,
-                is_archive: isForEdit.is_archive
-            }).catch((e) => {
-                console.log(e)
-            })
-        } else {
-            TestPlanService.createTestPlan(testPlan).then((response) => {
-                window.location.assign("/testplans/" + response.data[0].id)
-            })
-                .catch((e) => {
-                    console.log(e);
-                });
-        }
-        handleClose()
-
     }
 
     const MenuProps = {
@@ -402,7 +418,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                     renderValue={(selected) => <Grid>{selected}</Grid>}
                                     MenuProps={MenuProps}
                                 >
-                                    {testPlans.map((plan, index) => <MenuItem key={index}
+                                    {testPlansForSelect.map((plan, index) => <MenuItem key={index}
                                                                               value={plan as any}>{plan.title}</MenuItem>)}
                                 </Select>
                             </FormControl>
@@ -437,13 +453,13 @@ const CreationTestplanComponent: React.FC<Props> = ({
                             <Button
                                 onClick={handleClose}
                                 sx={{
-                                margin: "0px 5px 20px 3px",
-                                minWidth: 100,
-                                width: "40%",
-                                height: "45%",
-                                backgroundColor: "#FFFFFF",
-                                color: "#000000",
-                            }}
+                                    margin: "0px 5px 20px 3px",
+                                    minWidth: 100,
+                                    width: "40%",
+                                    height: "45%",
+                                    backgroundColor: "#FFFFFF",
+                                    color: "#000000",
+                                }}
                             >
                                 Отменить
                             </Button>
