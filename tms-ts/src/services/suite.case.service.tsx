@@ -88,7 +88,8 @@ export default class SuiteCaseService {
                 project: -1,
                 setup: "",
                 teardown: "",
-                estimate: -1
+                estimate: -1,
+                attachments: []
             }
         }
     }
