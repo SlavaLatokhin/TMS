@@ -37,7 +37,8 @@ function DeletionDialogElement(props: {
                             project: -1,
                             setup: "",
                             teardown: "",
-                            estimate: -1
+                            estimate: -1,
+                            attachments: []
                         }
                     })
                 }

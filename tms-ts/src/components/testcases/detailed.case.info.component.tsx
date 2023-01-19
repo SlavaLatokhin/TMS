@@ -1,7 +1,10 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {myCase} from "./suites.component";
 import {Divider, Grid, IconButton, Typography} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import Attachments from "../attachment/attachments";
+import SuiteCaseService from "../../services/suite.case.service";
+import {attachment} from "../models.interfaces";
 
 interface Props {
     myCase: myCase;
@@ -9,27 +12,37 @@ interface Props {
 }
 
 const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
+    const [, setAttachments] = React.useState<attachment[]>()
+    useEffect(() => {
+        SuiteCaseService.getCaseById(myCase.id).then((response) => {
+                myCase.attachments = response.data.attachments
+                setAttachments(response.data.attachments)
+            }
+        )
+    }, [myCase])
+
     return (
         <Grid style={{padding: 20, wordBreak: "break-word"}}>
             <Grid>
-                <Grid style={{display: "flex",justifyContent: "space-between"}}>
-                <Typography variant="h6">
-                    Название
-                </Typography>
-                <IconButton size={"small"} onClick={() => setDetailedCaseInfo({
-                    show: false, myCase: {
-                        id: -1,
-                        name: "",
-                        suite: -1,
-                        scenario: "",
-                        project: -1,
-                        setup: "",
-                        teardown: "",
-                        estimate: -1
-                    }
-                })}>
-                    <CloseIcon/>
-                </IconButton>
+                <Grid style={{display: "flex", justifyContent: "space-between"}}>
+                    <Typography variant="h6">
+                        Название
+                    </Typography>
+                    <IconButton size={"small"} onClick={() => setDetailedCaseInfo({
+                        show: false, myCase: {
+                            id: -1,
+                            name: "",
+                            suite: -1,
+                            scenario: "",
+                            project: -1,
+                            setup: "",
+                            teardown: "",
+                            estimate: -1,
+                            attachments: []
+                        }
+                    })}>
+                        <CloseIcon/>
+                    </IconButton>
                 </Grid>
                 <Grid>
                     {myCase.name}
@@ -69,6 +82,15 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
                 </Typography>
                 <Grid>
                     {myCase.estimate}
+                </Grid>
+                <Divider style={{margin: "10px 0px 10px 0px"}}/>
+            </Grid>}
+            {myCase.attachments && myCase.attachments?.length !== 0 && <Grid>
+                <Typography variant="h6">
+                    Прикрепленные файлы
+                </Typography>
+                <Grid>
+                    <Attachments attachments={myCase.attachments}/>
                 </Grid>
                 <Divider style={{margin: "10px 0px 10px 0px"}}/>
             </Grid>}

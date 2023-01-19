@@ -1,11 +1,10 @@
 import React, {useState} from 'react';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import Container from '@material-ui/core/Container';
-import {Card} from "@material-ui/core";
 import useStyles from "../styles/styles";
 import AuthService from "../services/Authorization/auth.service";
+import Container from "@mui/material/Container";
+import {Card, TextField} from "@mui/material";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 
 const Login: React.FC = () => {
     const classes = useStyles()

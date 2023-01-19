@@ -12,6 +12,7 @@ import PaginationSuitesComponent from "./pagination.suites.component";
 import {useParams, useNavigate} from "react-router-dom";
 import FormControl from "@mui/material/FormControl";
 import useStylesGlobal from "../../styles/styles";
+import {attachment} from "../models.interfaces";
 
 
 export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) => (
@@ -47,6 +48,7 @@ export interface myCase {
     teardown: string;
     setup: string;
     url?: string;
+    attachments: attachment[];
 }
 
 export interface treeSuite {
@@ -85,7 +87,8 @@ const SuitesComponent: React.FC = () => {
             project: -1,
             setup: "",
             teardown: "",
-            estimate: -1
+            estimate: -1,
+            attachments: []
         }
     })
     const {selectedSuiteId} = useParams()
@@ -210,8 +213,7 @@ const SuitesComponent: React.FC = () => {
                         "&:hover": {
                             backgroundColor: "#777676",
                         }
-                    }} onClick={handleShowCreationSuite}>Создать
-                        сьюту</Button>
+                    }} onClick={handleShowCreationSuite}>Создать сьюту</Button>
                     <CreationSuite show={showCreationSuite} setShow={setShowCreationSuite}
                                    selectedSuiteCome={selectedSuiteCome} setTreeSuites={setTreeSuites}
                                    setSelectedSuiteForTreeView={setSelectedSuiteForTreeView}

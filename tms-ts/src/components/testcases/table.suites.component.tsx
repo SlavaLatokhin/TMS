@@ -422,7 +422,8 @@ const TableSuites = (props: {
                         project: -1,
                         setup: "",
                         teardown: "",
-                        estimate: -1
+                        estimate: -1,
+                        attachments: []
                     }
                 })
                 setShownCase({show: false, myCaseId: -1})
@@ -446,7 +447,8 @@ const TableSuites = (props: {
                     project: -1,
                     setup: "",
                     teardown: "",
-                    estimate: -1
+                    estimate: -1,
+                    attachments: []
                 }
             })
             setShownCase({show: false, myCaseId: -1})

@@ -9,7 +9,6 @@ import {KeyboardArrowDown} from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import CreationProject from "./creation.project";
 import ProjectService from "../../services/project.service";
-import {useNavigate} from "react-router-dom";
 
 
 export interface project {
@@ -19,7 +18,6 @@ export interface project {
 }
 
 const ProjectSelection: React.FC = () => {
-    const navigate = useNavigate()
     const classes = useStyles();
     const [expanded, setExpanded] = React.useState(false);
     const [projects, setProjects] = React.useState<project[]>([]);
@@ -33,7 +31,7 @@ const ProjectSelection: React.FC = () => {
 
     const loginToProject = (project: project) => {
         localStorage.setItem("currentProject", JSON.stringify(project));
-        navigate("/project")
+        window.location.assign("/project");
     }
 
     return (

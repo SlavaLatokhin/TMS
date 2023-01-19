@@ -1,12 +1,15 @@
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import {Chip} from "@mui/material";
-import React, {ChangeEvent, FormEvent, useEffect, useState} from "react";
+import {Chip, Dialog, InputAdornment, TextField} from "@mui/material";
+import React, {ChangeEvent, useState} from "react";
 import useStyles from "../../styles/styles";
-import {Grid, Button, Dialog, IconButton, TextField, InputAdornment, Typography} from "@mui/material";
 import ProjectService from "../../services/project.service";
 import SuiteCaseService from "../../services/suite.case.service";
 import {XMLParser} from "fast-xml-parser";
 import {suite} from "../testcases/suites.component";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
 
 interface Props {
     show: boolean;
@@ -40,47 +43,6 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
     const [projectName, setProjectName] = useState(projectValue.name)
 
     const [projectDescription, setProjectDescription] = React.useState(projectValue.description)
-
-
-
-    const [disable, setDisable] = useState(false)
-    // const [paramsChecked, setParamsChecked] = useState<Array<string>>([])
-    // const [paramsExpanded, setParamsExpanded] = useState<Array<string>>([])
-    // const [params, setParams] = useState<param [] | null>(null)
-    // const nodes = [{value: 'no', label: 'Без параметров', icon: <BlockIcon className={classes.icons}/>},
-    //     {value: 'all', label: 'Все параметры', children: nodesChildren(), disabled: disable}];
-
-
-    // function nodesChildren() {
-    //     let arr: Node[] = [];
-    //     params?.map((param) => {
-    //         let flag = false
-    //         for (let node in arr) {
-    //             if (arr[node].label == param.group_name) {
-    //                 if (arr[node].children) {/*а это всегда true, но пусть будет*/
-    //                     arr[node].children?.push({
-    //                         value: String(param.id),
-    //                         label: param.data,
-    //                         disabled: disable,
-    //                         icon: false
-    //                     })
-    //                 }
-    //                 flag = true
-    //             }
-    //         }
-    //         if (!flag) {
-    //             arr.push({
-    //                 value: param.group_name,
-    //                 label: param.group_name,
-    //                 children: [{value: String(param.id), label: param.data, disabled: disable, icon: false}],
-    //                 disabled: disable
-    //             })
-    //         }
-    //     })
-    //
-    //     return arr
-    // }
-
 
     const onChangeProjectName = (e: React.ChangeEvent<HTMLInputElement>) => {
         setProjectName(e.target.value)
@@ -239,18 +201,6 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
         };
     }
 
-    // useEffect(() => {
-    //         TestPlanService.getParameters().then((response) => {
-    //             const localParams = response.data
-    //             setParams(localParams)
-    //         })
-    //             .catch((e) => {
-    //                 console.log(e);
-    //             });
-    //     }, []
-    // )
-
-
     return (
         <Dialog
             disableEnforceFocus
@@ -384,58 +334,6 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                             />
                         </Button>
                     </div>
-                    {/*<Grid container spacing={2} className={classes.gridContent}>*/}
-                    {/*    <Grid item xs={2}>*/}
-                    {/*        <Typography variant="h6">*/}
-                    {/*            Параметры*/}
-                    {/*        </Typography>*/}
-                    {/*    </Grid>*/}
-                    {/*    <Grid item xs={10}>*/}
-                    {/*        <FormControl style={{minWidth: "50%"}} className={classes.textFieldSelectCreationCaseSuite}>*/}
-                    {/*            {params ? (<CheckboxTree*/}
-                    {/*                    nodes={nodes}*/}
-                    {/*                    checked={paramsChecked}*/}
-                    {/*                    expanded={paramsExpanded}*/}
-                    {/*                    // nativeCheckboxes={true}*/}
-                    {/*                    onCheck={(paramsChecked) => {*/}
-                    {/*                        setParamsChecked(paramsChecked)*/}
-                    {/*                        if (paramsChecked.find(x => x == 'no')) {*/}
-                    {/*                            setDisable(true)*/}
-                    {/*                            setParamsChecked(['no'])*/}
-                    {/*                            setParamsExpanded([])*/}
-                    {/*                        } else {*/}
-                    {/*                            setDisable(false)*/}
-                    {/*                        }*/}
-                    {/*                    }}*/}
-                    {/*                    onExpand={(paramsExpanded) => setParamsExpanded(paramsExpanded)}*/}
-                    {/*                    icons={{*/}
-                    {/*                        check: <CheckBoxOutlinedIcon className={classes.icons}/>,*/}
-                    {/*                        uncheck: <CheckBoxOutlineBlankIcon className={classes.icons}/>,*/}
-                    {/*                        halfCheck: <CheckBoxOutlinedIcon style={{color: alpha("#8956FF", 0.6)}}/>,*/}
-                    {/*                        expandClose: <KeyboardArrowRightIcon className={classes.icons}/>,*/}
-                    {/*                        expandOpen: <KeyboardArrowUpIcon className={classes.icons}/>,*/}
-                    {/*                        expandAll: <IndeterminateCheckBoxOutlinedIcon className={classes.icons}/>,*/}
-                    {/*                        collapseAll: <IndeterminateCheckBoxOutlinedIcon className={classes.icons}/>,*/}
-                    {/*                        parentClose: <FolderCopyOutlinedIcon className={classes.icons}/>,*/}
-                    {/*                        parentOpen: <FolderCopyOutlinedIcon className={classes.icons}/>,*/}
-                    {/*                        // leaf: <ArticleOutlinedIcon className={classes.icons}/>,*/}
-                    {/*                    }}*/}
-                    {/*                    // className={classes.tree}*/}
-                    {/*                />) :*/}
-                    {/*                (<CheckboxTree nodes={[{*/}
-                    {/*                    value: 'no',*/}
-                    {/*                    label: 'Без параметров',*/}
-                    {/*                    disabled: true,*/}
-                    {/*                    showCheckbox: false,*/}
-                    {/*                    icon: <BlockIcon className={classes.icons}/>*/}
-                    {/*                }]}*/}
-                    {/*                />)*/}
-                    {/*            }*/}
-
-                    {/*        </FormControl>*/}
-
-                    {/*    </Grid>*/}
-                    {/*</Grid>*/}
                 </Grid>
                 <Grid xs={3} item style={{
                     backgroundColor: "#eeeeee", paddingTop: 26, display: "flex",
