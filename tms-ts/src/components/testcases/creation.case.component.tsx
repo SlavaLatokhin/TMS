@@ -1,14 +1,17 @@
-import {
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-} from "@mui/material";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
 import React, {useEffect, useState} from "react";
 import useStyles from "../../styles/styles";
-import {Grid, Button, Dialog, TextField, Typography} from "@mui/material";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import Grid from "@mui/material/Grid";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import SuiteCaseService from "../../services/suite.case.service";
-import {CustomWidthTooltip, myCase, treeSuite} from "./suites.component";
+import {CustomWidthTooltip, treeSuite} from "./suites.component";
+import {myCase} from "../models.interfaces";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import AttachmentButton from "../attachment/attachment_button";
 import AttachmentService from "../../services/attachment.servise";
@@ -235,7 +238,7 @@ const CreationCase: React.FC<Props> = ({
         PaperProps: {
             style: {
                 maxHeight: "30%",
-                maxWidth: "30%",
+                maxWidth: "10%",
                 overflow: "auto"
             },
         },

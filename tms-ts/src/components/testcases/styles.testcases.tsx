@@ -6,7 +6,7 @@ export default makeStyles({
         marginTop: 0,
         position: "absolute",
         display: "flex",
-        height: "91.5%",
+        height: "95%",
         width: "100%"
     },
     leftGrid: {

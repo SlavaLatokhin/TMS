@@ -1,9 +1,12 @@
-import React, {useEffect} from "react";
-import {myCase} from "./suites.component";
-import {Divider, Grid, IconButton, Typography} from "@mui/material";
+import React from "react";
+import {myCase} from "../models.interfaces";
+import Divider from "@mui/material/Divider";
+import Grid from "@mui/material/Grid";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
 import CloseIcon from '@mui/icons-material/Close';
-import Attachments from "../attachment/attachments";
 import SuiteCaseService from "../../services/suite.case.service";
+import Attachments from "../attachment/attachments";
 import {attachment} from "../models.interfaces";
 
 interface Props {
@@ -28,19 +31,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
                     <Typography variant="h6">
                         Название
                     </Typography>
-                    <IconButton size={"small"} onClick={() => setDetailedCaseInfo({
-                        show: false, myCase: {
-                            id: -1,
-                            name: "",
-                            suite: -1,
-                            scenario: "",
-                            project: -1,
-                            setup: "",
-                            teardown: "",
-                            estimate: -1,
-                            attachments: []
-                        }
-                    })}>
+                    <IconButton size={"small"} onClick={() => setDetailedCaseInfo(SuiteCaseService.getEmptyDetailedCaseInfo())}>
                         <CloseIcon/>
                     </IconButton>
                 </Grid>

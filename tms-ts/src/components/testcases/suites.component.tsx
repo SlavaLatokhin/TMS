@@ -6,19 +6,24 @@ import TableSuites from "./table.suites.component";
 import SuiteCaseService from "../../services/suite.case.service";
 import FolderSuites from "./folder.suites.component";
 import {styled} from "@mui/material/styles";
-import {InputLabel, MenuItem, Select, Tooltip, tooltipClasses, TooltipProps, Button} from "@mui/material";
+import {TooltipProps} from "@mui/material";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import Tooltip from "@mui/material/Tooltip";
+import Button from "@mui/material/Button";
 import 'react-splitter-layout/lib/index.css';
 import PaginationSuitesComponent from "./pagination.suites.component";
 import {useParams, useNavigate} from "react-router-dom";
 import FormControl from "@mui/material/FormControl";
 import useStylesGlobal from "../../styles/styles";
-import {attachment} from "../models.interfaces";
+import {myCase} from "../models.interfaces";
 
 
 export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) => (
     <Tooltip  {...props} classes={{popper: className}}/>
 ))(() => ({
-    [`& .${tooltipClasses.tooltip}`]: {
+    [`& .MuiTooltip-tooltip`]: {
         marginLeft: 10,
         minWidth: 200,
         minHeight: 25,
@@ -28,7 +33,7 @@ export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) =
         fontSize: 15,
         textAlign: "start"
     },
-    [`& .${tooltipClasses.arrow}`]: {
+    [`& .MuiTooltip-arrow`]: {
         "&:before": {
             border: "1px solid #5c6900",
             boxSizing: "border-box",
@@ -37,19 +42,6 @@ export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) =
         fontSize: 25,
     },
 }));
-
-export interface myCase {
-    id: number;
-    name: string;
-    suite: number;
-    scenario: string;
-    project: number;
-    estimate: number | null;
-    teardown: string;
-    setup: string;
-    url?: string;
-    attachments: attachment[];
-}
 
 export interface treeSuite {
     id: number;
@@ -68,7 +60,7 @@ export interface suite {
 }
 
 
-const SuitesComponent: React.FC = () => {
+const SuitesComponent = () => {
     const classes = useStyles()
     const [showCreationCase, setShowCreationCase] = useState(false)
     const [showCreationSuite, setShowCreationSuite] = useState(false)
@@ -78,19 +70,7 @@ const SuitesComponent: React.FC = () => {
     const [infoSuiteForEdit, setInfoSuiteForEdit] = useState<{ id: number, name: string } | null>(null)
     const [lastEditCase, setLastEditCase] = useState<number>(-1)
     const [selectedSuiteCome, setSelectedSuiteCome] = useState<{ id: number, name: string } | null>(null)
-    const [detailedCaseInfo, setDetailedCaseInfo] = useState<{ show: boolean, myCase: myCase }>({
-        show: false, myCase: {
-            id: -1,
-            name: "",
-            suite: -1,
-            scenario: "",
-            project: -1,
-            setup: "",
-            teardown: "",
-            estimate: -1,
-            attachments: []
-        }
-    })
+    const [detailedCaseInfo, setDetailedCaseInfo] = useState<{ show: boolean, myCase: myCase }>(SuiteCaseService.getEmptyDetailedCaseInfo())
     const {selectedSuiteId} = useParams()
     const [selectedSuiteForTreeView, setSelectedSuiteForTreeView] = useState<treeSuite | undefined>(undefined)
     const navigate = useNavigate()
